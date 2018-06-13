@@ -15,6 +15,7 @@ CTestMap::CTestMap(string givenMapName)
 			stringMax = line.size();
 			for (int i = 0; i < stringMax && i < mapSize; ++i) // check which is hit first line size or map size
 			{
+				cout << line[i] - '0' << endl;
 				mapSquares[currentLine][i] = line[i] - '0'; // convert char to int and put it into the map
 			}
 			++currentLine; // next line before repeating
@@ -24,6 +25,7 @@ CTestMap::CTestMap(string givenMapName)
 	else
 	{
 		//TODO error report
+		cout << "Error opening file" << endl;
 	}
 }
 
