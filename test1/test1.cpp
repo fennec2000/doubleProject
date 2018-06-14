@@ -16,13 +16,14 @@ void main()
 	myEngine->AddMediaFolder("Media");
 
 	/**** Set up your scene here ****/
-	CTestMap* pTest = new CTestMap("Maps\\testMap1.map");
+	CTestMap* pTest = new CTestMap("Maps\\testMap2.map");
 	
 	// display map
 	// set up
 	// mesh
 	IMesh* pCubeMesh = myEngine->LoadMesh("Cube.x");
 	IMesh* pFloorMesh = myEngine->LoadMesh("Floor.x");
+	IMesh* pAIMesh = myEngine->LoadMesh("sierra.x");
 
 	// models
 	float cubeSize = 10.0f;
@@ -30,14 +31,21 @@ void main()
 	for (int i = 0; i < mapSize; ++i)
 		for (int j = 0; j < mapSize; ++j)
 		{
-			pCube[i][j] = pCubeMesh->CreateModel(i * cubeSize, -cubeSize / 2.0f, j * cubeSize);
+			pCube[i][j] = pCubeMesh->CreateModel(i * -cubeSize, -cubeSize / 2.0f, j * cubeSize);
 			int currentCubeData = pTest->GetCubeData(i, j);
-			//cout << currentCubeData << endl;
+			//cout << currentCubeData << endl; // static debuggin
 			if (currentCubeData == 0)
 				pCube[i][j]->SetSkin("WhiteCube.png");
+			else if (currentCubeData == 1)
+				pCube[i][j]->SetSkin("SpawnCube.png");
+			else if (currentCubeData == 2)
+				pCube[i][j]->SetSkin("GoalCube.png");
 		}
 
 	IModel* pFloor = pFloorMesh->CreateModel(0.0f, -0.1f, 0.0f);
+	pair<int, int> spawnPoint = pTest->GetSpawnPoint();
+	IModel* pAIModel = pAIMesh->CreateModel(-spawnPoint.first * cubeSize, 0.0f, spawnPoint.second * cubeSize);
+	pAIModel->Scale(cubeSize);
 
 	// camera
 	ICamera* myCamera = myEngine->CreateCamera(kFPS);
