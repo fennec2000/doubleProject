@@ -125,13 +125,22 @@ copy "C:\ProgramData\TL-Engine\3rd Party\TL-Xtreme\shader\*.*" "$(OutDir)" &gt; 
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CAIThink.cpp" />
+    <ClCompile Include="CDTTable.cpp" />
+    <ClCompile Include="CFileReader.cpp" />
+    <ClCompile Include="CNode.cpp" />
     <ClCompile Include="CTestMap.cpp" />
     <ClCompile Include="test1.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="ClassDiagram.cd" />
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CAIThink.h" />
+    <ClInclude Include="CDTTable.h" />
+    <ClInclude Include="CFileReader.h" />
+    <ClInclude Include="CNode.h" />
     <ClInclude Include="CTestMap.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
