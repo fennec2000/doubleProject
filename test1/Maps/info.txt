@@ -1,3 +1,0 @@
-0 = nothing
-1 = spawn
-2 = goal
