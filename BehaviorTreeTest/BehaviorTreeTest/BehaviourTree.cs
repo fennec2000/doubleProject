@@ -4,6 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using System.Reflection;
+using TestingNodeFunctions;
+
+/*
+ * Error codes:
+ * return 0xffffffff; // 4294967295 // id already exists
+ * return 0xfffffffe; // 4294967294 // failed to create new node
+ */
 
 enum CompositeNodeTypes
 {
@@ -70,7 +78,62 @@ namespace BehaviorTreeTest
 
         public void LoadTree(string filePath = "Default.tree")
         {
+            List<string> data;
+            string[] lines = File.ReadAllLines(filePath);
+            uint x;
+            int count;
+            List<uint> children = new List<uint>();
+            foreach (string line in lines)
+            {
+                data = line.Split(',').ToList<string>();
+                count = data.Count();
+                if (UInt32.TryParse(data[0], out uint id))
+                {
+                    switch (data[1])
+                    {
+                        case "ActionNode":
+                            //Type t = typeof(TestMethods);
+                            //MethodInfo method = t.GetMethod("Hello");
+                            //method.Invoke(this, null);
+                            CreateActionNode(Delegate.CreateDelegate(typeof(ActionNode.Do), typeof(ActionNode.Do).GetMethod(data[2])) as ActionNode.Do, id);
+                            break;
 
+
+                        case "Inverter":
+                            if (UInt32.TryParse(data[2], out x))
+                                CreateDecoratorNode(DecoratorNodeType.Inverter, x, id);
+                            break;
+                        case "Repeater":
+                            if (UInt32.TryParse(data[2], out x))
+                                CreateDecoratorNode(DecoratorNodeType.Repeater, x, id);
+                            break;
+                        case "RepeatTillFail":
+                            if (UInt32.TryParse(data[2], out x))
+                                CreateDecoratorNode(DecoratorNodeType.RepeatTillFail, x, id);
+                            break;
+                        case "Limiter":
+                            if (UInt32.TryParse(data[2], out x))
+                                CreateDecoratorNode(DecoratorNodeType.RepeatTillFail, x, id);
+                            break;
+
+
+                        case "Selector":
+                            for(int i = 2; i < count; ++i)
+                                if (UInt32.TryParse(data[2], out x))
+                                    children.Add(x);
+
+                            CreateCompositeNode(CompositeNodeTypes.Selector, children);
+                            break;
+                        case "Sequence":
+                            for (int i = 2; i < count; ++i)
+                                if (UInt32.TryParse(data[2], out x))
+                                    children.Add(x);
+
+                            CreateCompositeNode(CompositeNodeTypes.Sequence, children);
+                            break;
+                    }
+                }
+            }
         }
 
         public void RunTree()
@@ -86,9 +149,32 @@ namespace BehaviorTreeTest
 
         public uint CreateCompositeNode(CompositeNodeTypes composite, List<uint> nodeIDs)
         {
+            Node newNode = MakeCompositeNode(composite, nodeIDs);
+            if (newNode == null)
+                return 0xfffffffe;  // failed to create new node
+            newNode.SetID(++m_nodeID);
+            uint a = newNode.GetID();
+            m_nodeDic.Add(a, newNode);
+            return a;
+        }
+
+        private uint CreateCompositeNode(CompositeNodeTypes composite, List<uint> nodeIDs, uint nodeID)
+        {
+            if (m_nodeDic.ContainsKey(nodeID))
+                return 0xffffffff;   // id already exists
+            Node newNode = MakeCompositeNode(composite, nodeIDs);
+            if (newNode == null)
+                return 0xfffffffe;  // failed to create new node
+            newNode.SetID(nodeID);
+            m_nodeDic.Add(nodeID, newNode);
+            return nodeID;
+        }
+
+        private Node MakeCompositeNode(CompositeNodeTypes composite, List<uint> nodeIDs)
+        {
             // Get nodes
             List<Node> children = new List<Node>();
-            foreach(uint id in nodeIDs)
+            foreach (uint id in nodeIDs)
             {
                 if (m_nodeDic.TryGetValue(id, out Node result))
                     children.Add(result);
@@ -105,8 +191,17 @@ namespace BehaviorTreeTest
                     newNode = new Sequence(children);
                     break;
                 default:
-                    return 0; // tryed to create unknown composit node
+                    return null;
             }
+
+            return newNode;
+        }
+
+        public uint CreateDecoratorNode(DecoratorNodeType decorator, uint childNodeID)
+        {
+            Node newNode = MakeDecoratorNode(decorator, childNodeID);
+            if (newNode == null)
+                return 0xfffffffe;  // failed to create new node
 
             newNode.SetID(++m_nodeID);
             uint a = newNode.GetID();
@@ -114,11 +209,24 @@ namespace BehaviorTreeTest
             return a;
         }
 
-        public uint CreateDecoratorNode(DecoratorNodeType decorator, uint nodeID)
+        private uint CreateDecoratorNode(DecoratorNodeType decorator, uint childNodeID, uint nodeID)
+        {
+            if (m_nodeDic.ContainsKey(nodeID))
+                return 0xffffffff;   // id already exists
+            Node newNode = MakeDecoratorNode(decorator, childNodeID);
+            if (newNode == null)
+                return 0xfffffffe;  // failed to create new node
+
+            newNode.SetID(nodeID);
+            m_nodeDic.Add(nodeID, newNode);
+            return nodeID;
+        }
+
+        private Node MakeDecoratorNode(DecoratorNodeType decorator, uint childNodeID)
         {
             Node newNode;
-            if (!m_nodeDic.TryGetValue(nodeID, out Node result))
-                return 0;   // failed to get nodeID
+            if (!m_nodeDic.TryGetValue(childNodeID, out Node result))
+                return null;   // failed to get childNodeID
 
             switch (decorator)
             {
@@ -135,13 +243,10 @@ namespace BehaviorTreeTest
                     newNode = new Limiter(result);
                     break;
                 default:
-                    return 0; // tryed to create unknown decorator node
+                    return null; // tried to create unknown decorator node
             }
-            
-            newNode.SetID(++m_nodeID);
-            uint a = newNode.GetID();
-            m_nodeDic.Add(a, newNode);
-            return a;
+
+            return newNode;
         }
 
         public uint CreateActionNode(ActionNode.Do func)
@@ -152,6 +257,17 @@ namespace BehaviorTreeTest
             uint a = newNode.GetID();
             m_nodeDic.Add(a, newNode);
             return a;
+        }
+
+        private uint CreateActionNode(ActionNode.Do func, uint nodeID)
+        {
+            if (m_nodeDic.ContainsKey(nodeID))
+                return 0xffffffff;   // id already exists
+            ActionNode newNode = new ActionNode(func);
+
+            newNode.SetID(nodeID);
+            m_nodeDic.Add(nodeID, newNode);
+            return nodeID;
         }
     }
 }

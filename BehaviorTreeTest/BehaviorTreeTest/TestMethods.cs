@@ -1,4 +1,7 @@
-﻿namespace TestingNodeFunctions
+﻿using System;
+using System.Collections.Generic;
+
+namespace TestingNodeFunctions
 {
     public class TestMethods
     {
@@ -30,6 +33,12 @@
         {
             counter += a;
             return counter == target ? NodeStates.SUCCESS : NodeStates.FAILURE;
+        }
+
+        public NodeStates Hello()
+        {
+            Console.WriteLine("Hello");
+            return NodeStates.SUCCESS;
         }
     }
 }

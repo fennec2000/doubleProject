@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using TestingNodeFunctions;
 
 namespace BehaviorTreeTest
 {
@@ -56,6 +58,36 @@ namespace BehaviorTreeTest
             var children = new List<uint> { T2A, T2B, T2C };
             var root = firstTree.CreateCompositeNode(CompositeNodeTypes.Selector, children);
             firstTree.SetRootNode(root);
+
+            ActionNode.Do testDelegate = new ActionNode.Do(CounterInc);
+            testDelegate();
+            Console.WriteLine(CounterInc().GetType());
+            Console.WriteLine(testDelegate.GetType());
+            Console.WriteLine(testDelegate.Method);
+            Console.WriteLine(testDelegate.Method.GetType());
+
+            
+            Type calledType = typeof(TestMethods);
+            MethodInfo method = calledType.GetMethod("Hello");
+            ActionNode.Do testDelegate2 = Delegate.CreateDelegate(typeof(ActionNode.Do), null, method) as ActionNode.Do;
+            testDelegate2();
+            //method.Invoke(this, null);
+
+            calledType.InvokeMember(
+                "Hello",
+                System.Reflection.BindingFlags.InvokeMethod | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic |
+                    System.Reflection.BindingFlags.Static,
+                null,
+                null,
+                null);
+
+            var info = typeof(NodeStates).GetMethod("CounterInc");
+            Console.WriteLine(info);
+
+            //ActionNode.Do testDelegate2 = Delegate.CreateDelegate(typeof(NodeStates), ) as ActionNode.Do;
+            //ActionNode.Do.CreateDelegate(typeof(ActionNode.Do), typeof(NodeStates).GetMethod("CounterInc")) as ActionNode.Do;
+
+            //testDelegate2();
 
             firstTree.SaveTree();
             secondTree.LoadTree();
