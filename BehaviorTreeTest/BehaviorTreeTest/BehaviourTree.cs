@@ -41,6 +41,7 @@ namespace BehaviorTreeTest
         {
             File.WriteAllText(filePath, "");
             SaveTreeRec(m_rootNode, filePath);
+            File.AppendAllText(filePath, "0,root," + m_rootNode.GetID());
         }
 
         protected void SaveTreeRec(Node node, string path)
@@ -73,7 +74,6 @@ namespace BehaviorTreeTest
                 
             }
             File.AppendAllText(path, output + Environment.NewLine);
-            Console.WriteLine(output);
         }
 
         public void LoadTree(string filePath = "Default.tree")
@@ -89,13 +89,16 @@ namespace BehaviorTreeTest
                 count = data.Count();
                 if (UInt32.TryParse(data[0], out uint id))
                 {
+                    if (id > m_nodeID)
+                        m_nodeID = id;
+
                     switch (data[1])
                     {
                         case "ActionNode":
-                            //Type t = typeof(TestMethods);
-                            //MethodInfo method = t.GetMethod("Hello");
-                            //method.Invoke(this, null);
-                            CreateActionNode(Delegate.CreateDelegate(typeof(ActionNode.Do), typeof(ActionNode.Do).GetMethod(data[2])) as ActionNode.Do, id);
+                            Type calledType = typeof(TestMethods);
+                            MethodInfo method = calledType.GetMethod(data[2]);
+                            ActionNode.Do action = Delegate.CreateDelegate(typeof(ActionNode.Do), null, method) as ActionNode.Do;
+                            CreateActionNode(action, id);
                             break;
 
 
@@ -119,17 +122,23 @@ namespace BehaviorTreeTest
 
                         case "Selector":
                             for(int i = 2; i < count; ++i)
-                                if (UInt32.TryParse(data[2], out x))
+                                if (UInt32.TryParse(data[i], out x))
                                     children.Add(x);
 
-                            CreateCompositeNode(CompositeNodeTypes.Selector, children);
+                            CreateCompositeNode(CompositeNodeTypes.Selector, children, id);
                             break;
                         case "Sequence":
                             for (int i = 2; i < count; ++i)
-                                if (UInt32.TryParse(data[2], out x))
+                                if (UInt32.TryParse(data[i], out x))
                                     children.Add(x);
 
-                            CreateCompositeNode(CompositeNodeTypes.Sequence, children);
+                            CreateCompositeNode(CompositeNodeTypes.Sequence, children, id);
+                            break;
+
+                        // Set the root node at the end
+                        case "root":
+                            if (UInt32.TryParse(data[2], out x))
+                                SetRootNode(x);
                             break;
                     }
                 }

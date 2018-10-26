@@ -10,88 +10,57 @@ namespace BehaviorTreeTest
 {
     class Program
     {
-        static int counter = 0;
-        static int target = 10;
-
-        static NodeStates Equal()
-        {
-            Console.WriteLine("Action: Equal: counter: " + counter + ", target: " + target);
-            return counter == target ? NodeStates.SUCCESS : NodeStates.FAILURE;
-        }
-        static NodeStates NotEqual()
-        {
-            Console.WriteLine("Action: NotEqual: counter: " + counter + ", target: " + target);
-            return counter != target ? NodeStates.SUCCESS : NodeStates.FAILURE;
-        }
-
-        static NodeStates CounterInc()
-        {
-            counter += 1;
-            Console.WriteLine("Action: Inc: counter: " + counter + ", target: " + target);
-            return counter == target ? NodeStates.SUCCESS : NodeStates.FAILURE;
-        }
-
-        static NodeStates CounterDec()
-        {
-            counter -= 1;
-            Console.WriteLine("Action: Dec: counter: " + counter + ", target: " + target);
-            return counter == target ? NodeStates.SUCCESS : NodeStates.FAILURE;
-        }
-
-        static NodeStates CounterAdd(int a)
-        {
-            counter += a;
-            Console.WriteLine("Action: Add: counter: " + counter + ", target: " + target);
-            return counter == target ? NodeStates.SUCCESS : NodeStates.FAILURE;
-        }
-
         static void Main(string[] args)
         {
+            TestMethods testFunc = new TestMethods();
             BehaviourTree firstTree = new BehaviourTree();
             BehaviourTree secondTree = new BehaviourTree();
 
-            var T3  = firstTree.CreateActionNode(CounterInc);
-            var T2A = firstTree.CreateActionNode(CounterInc);
+            var T3  = firstTree.CreateActionNode(testFunc.CounterInc);
+            var T2A = firstTree.CreateActionNode(testFunc.CounterInc);
             var T2B = firstTree.CreateDecoratorNode(DecoratorNodeType.Inverter, T3);
-            var T2C = firstTree.CreateActionNode(CounterInc);
+            var T2C = firstTree.CreateActionNode(testFunc.CounterInc);
 
             var children = new List<uint> { T2A, T2B, T2C };
             var root = firstTree.CreateCompositeNode(CompositeNodeTypes.Selector, children);
             firstTree.SetRootNode(root);
-
-            ActionNode.Do testDelegate = new ActionNode.Do(CounterInc);
-            testDelegate();
-            Console.WriteLine(CounterInc().GetType());
-            Console.WriteLine(testDelegate.GetType());
-            Console.WriteLine(testDelegate.Method);
-            Console.WriteLine(testDelegate.Method.GetType());
-
             
-            Type calledType = typeof(TestMethods);
-            MethodInfo method = calledType.GetMethod("Hello");
-            ActionNode.Do testDelegate2 = Delegate.CreateDelegate(typeof(ActionNode.Do), null, method) as ActionNode.Do;
-            testDelegate2();
-            //method.Invoke(this, null);
+            firstTree.SaveTree();
+            secondTree.LoadTree();
+            BehaviourTree thirdTree = new BehaviourTree("default.tree");
+            secondTree.SaveTree("Tree2.tree");
+            thirdTree.SaveTree("Tree3.tree");
 
-            calledType.InvokeMember(
-                "Hello",
-                System.Reflection.BindingFlags.InvokeMethod | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic |
-                    System.Reflection.BindingFlags.Static,
-                null,
-                null,
-                null);
+            //ActionNode.Do testDelegate = new ActionNode.Do(testFunc.CounterInc);
+            //testDelegate();
+            //Console.WriteLine(testFunc.CounterInc().GetType());
+            //Console.WriteLine(testDelegate.GetType());
+            //Console.WriteLine(testDelegate.Method);
+            //Console.WriteLine(testDelegate.Method.GetType());
 
-            var info = typeof(NodeStates).GetMethod("CounterInc");
-            Console.WriteLine(info);
+
+            //Type calledType = typeof(TestMethods);
+            //MethodInfo method = calledType.GetMethod("Hello");
+            //ActionNode.Do testDelegate2 = Delegate.CreateDelegate(typeof(ActionNode.Do), null, method) as ActionNode.Do;
+            //testDelegate2();
+            ////method.Invoke(this, null);
+
+            //calledType.InvokeMember(
+            //    "Hello",
+            //    System.Reflection.BindingFlags.InvokeMethod | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic |
+            //        System.Reflection.BindingFlags.Static,
+            //    null,
+            //    null,
+            //    null);
+
+            //var info = typeof(NodeStates).GetMethod("CounterInc");
+            //Console.WriteLine(info);
 
             //ActionNode.Do testDelegate2 = Delegate.CreateDelegate(typeof(NodeStates), ) as ActionNode.Do;
             //ActionNode.Do.CreateDelegate(typeof(ActionNode.Do), typeof(NodeStates).GetMethod("CounterInc")) as ActionNode.Do;
 
             //testDelegate2();
 
-            firstTree.SaveTree();
-            secondTree.LoadTree();
-            BehaviourTree thirdTree = new BehaviourTree("default.tree");
 
             //ActionNode T3 = new ActionNode(CounterInc);
             //ActionNode T2A = new ActionNode(CounterInc);
