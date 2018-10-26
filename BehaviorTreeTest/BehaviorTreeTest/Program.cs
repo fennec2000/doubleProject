@@ -20,8 +20,9 @@ namespace BehaviorTreeTest
             var T2A = firstTree.CreateActionNode(testFunc.CounterInc);
             var T2B = firstTree.CreateDecoratorNode(DecoratorNodeType.Inverter, T3);
             var T2C = firstTree.CreateActionNode(testFunc.CounterInc);
+            var T2D = firstTree.CreateDecoratorNode(DecoratorNodeType.Repeater, T3, 3);
 
-            var children = new List<uint> { T2A, T2B, T2C };
+            var children = new List<uint> { T2A, T2B, T2C, T2D };
             var root = firstTree.CreateCompositeNode(CompositeNodeTypes.Selector, children);
             firstTree.SetRootNode(root);
             

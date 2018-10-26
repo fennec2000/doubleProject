@@ -156,13 +156,18 @@ public class Inverter : DecoratorNode
 // repeats the child node again
 public class Repeater : DecoratorNode
 {
-    public Repeater(Node node) : base(node) { }
+    uint m_repeates = 2;
+
+    public uint GetNumberOfRepeats() { return m_repeates; }
+
+    public Repeater(Node node, uint x = 2) : base(node) { m_repeates = x; }
 
     public override NodeStates Run()
     {
-        // hard coded to run twice, possible upgrade to allow the number of repeats
-        int x = 1;
-        for (int i = 0; i < x; ++i)
+        if (m_repeates < 1)
+            return NodeStates.SUCCESS;
+
+        for (int i = 1; i < m_repeates; ++i)
             m_node.Run();
 
         switch (m_node.Run())

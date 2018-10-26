@@ -44,10 +44,27 @@ namespace BehaviorTreeTest
             File.AppendAllText(filePath, "0,root," + m_rootNode.GetID());
         }
 
+        protected bool CheckForSavedNode(uint checkNodeID, string filePath)
+        {
+            string[] lines = File.ReadAllLines(filePath);
+            foreach (string line in lines)
+            {
+                string s = line.Split(',')[0];
+                if (UInt32.TryParse(s, out uint id))
+                    if (id == checkNodeID)
+                        return true;
+            }
+            return false;
+        }
+
         protected void SaveTreeRec(Node node, string path)
         {
+            uint nodeID = node.GetID();
+            if (CheckForSavedNode(nodeID, path))
+                return;
+
             string nodeName = node.ToString();
-            string output = node.GetID() + "," + nodeName;
+            string output = nodeID + "," + nodeName;
 
             // leaf node
             if (nodeName == "ActionNode")
@@ -58,9 +75,18 @@ namespace BehaviorTreeTest
             // decorator node
             else if (nodeName == "Inverter" || nodeName == "Repeater" || nodeName == "RepeatTillFail" || nodeName == "Limiter")
             {
-                DecoratorNode d = (DecoratorNode)node;
-                SaveTreeRec(d.ChildNode, path);
-                output += "," + d.ChildNode.GetID();
+                if (nodeName == "Repeater")
+                {
+                    Repeater r = (Repeater)node;
+                    SaveTreeRec(r.ChildNode, path);
+                    output += "," + r.ChildNode.GetID() + "," + r.GetNumberOfRepeats();
+                }
+                else
+                {
+                    DecoratorNode d = (DecoratorNode)node;
+                    SaveTreeRec(d.ChildNode, path);
+                    output += "," + d.ChildNode.GetID();
+                }
             }
             // composite node
             else if (nodeName == "Selector" || nodeName == "Sequence")
@@ -98,25 +124,34 @@ namespace BehaviorTreeTest
                             Type calledType = typeof(TestMethods);
                             MethodInfo method = calledType.GetMethod(data[2]);
                             ActionNode.Do action = Delegate.CreateDelegate(typeof(ActionNode.Do), null, method) as ActionNode.Do;
-                            CreateActionNode(action, id);
+                            CreateActionNodeWithID(action, id);
                             break;
 
 
                         case "Inverter":
                             if (UInt32.TryParse(data[2], out x))
-                                CreateDecoratorNode(DecoratorNodeType.Inverter, x, id);
+                                CreateDecoratorNodeWithID(DecoratorNodeType.Inverter, x, id);
                             break;
                         case "Repeater":
                             if (UInt32.TryParse(data[2], out x))
-                                CreateDecoratorNode(DecoratorNodeType.Repeater, x, id);
+                            {
+                                if (data.Count >= 3)    // does it contain extra data
+                                {
+                                    if (UInt32.TryParse(data[3], out uint y))
+                                        CreateDecoratorNodeWithID(DecoratorNodeType.Repeater, x, id, y);
+                                }
+                                else
+                                    CreateDecoratorNodeWithID(DecoratorNodeType.Repeater, x, id);
+                            }
+                                
                             break;
                         case "RepeatTillFail":
                             if (UInt32.TryParse(data[2], out x))
-                                CreateDecoratorNode(DecoratorNodeType.RepeatTillFail, x, id);
+                                CreateDecoratorNodeWithID(DecoratorNodeType.RepeatTillFail, x, id);
                             break;
                         case "Limiter":
                             if (UInt32.TryParse(data[2], out x))
-                                CreateDecoratorNode(DecoratorNodeType.RepeatTillFail, x, id);
+                                CreateDecoratorNodeWithID(DecoratorNodeType.RepeatTillFail, x, id);
                             break;
 
 
@@ -125,14 +160,14 @@ namespace BehaviorTreeTest
                                 if (UInt32.TryParse(data[i], out x))
                                     children.Add(x);
 
-                            CreateCompositeNode(CompositeNodeTypes.Selector, children, id);
+                            CreateCompositeNodeWithID(CompositeNodeTypes.Selector, children, id);
                             break;
                         case "Sequence":
                             for (int i = 2; i < count; ++i)
                                 if (UInt32.TryParse(data[i], out x))
                                     children.Add(x);
 
-                            CreateCompositeNode(CompositeNodeTypes.Sequence, children, id);
+                            CreateCompositeNodeWithID(CompositeNodeTypes.Sequence, children, id);
                             break;
 
                         // Set the root node at the end
@@ -167,7 +202,7 @@ namespace BehaviorTreeTest
             return a;
         }
 
-        private uint CreateCompositeNode(CompositeNodeTypes composite, List<uint> nodeIDs, uint nodeID)
+        private uint CreateCompositeNodeWithID(CompositeNodeTypes composite, List<uint> nodeIDs, uint nodeID)
         {
             if (m_nodeDic.ContainsKey(nodeID))
                 return 0xffffffff;   // id already exists
@@ -206,9 +241,9 @@ namespace BehaviorTreeTest
             return newNode;
         }
 
-        public uint CreateDecoratorNode(DecoratorNodeType decorator, uint childNodeID)
+        public uint CreateDecoratorNode(DecoratorNodeType decorator, uint childNodeID, uint extra = 0)
         {
-            Node newNode = MakeDecoratorNode(decorator, childNodeID);
+            Node newNode = MakeDecoratorNode(decorator, childNodeID, extra);
             if (newNode == null)
                 return 0xfffffffe;  // failed to create new node
 
@@ -218,11 +253,11 @@ namespace BehaviorTreeTest
             return a;
         }
 
-        private uint CreateDecoratorNode(DecoratorNodeType decorator, uint childNodeID, uint nodeID)
+        private uint CreateDecoratorNodeWithID(DecoratorNodeType decorator, uint childNodeID, uint nodeID, uint extra = 0)
         {
             if (m_nodeDic.ContainsKey(nodeID))
                 return 0xffffffff;   // id already exists
-            Node newNode = MakeDecoratorNode(decorator, childNodeID);
+            Node newNode = MakeDecoratorNode(decorator, childNodeID, extra);
             if (newNode == null)
                 return 0xfffffffe;  // failed to create new node
 
@@ -231,7 +266,7 @@ namespace BehaviorTreeTest
             return nodeID;
         }
 
-        private Node MakeDecoratorNode(DecoratorNodeType decorator, uint childNodeID)
+        private Node MakeDecoratorNode(DecoratorNodeType decorator, uint childNodeID, uint extra = 0)
         {
             Node newNode;
             if (!m_nodeDic.TryGetValue(childNodeID, out Node result))
@@ -243,7 +278,7 @@ namespace BehaviorTreeTest
                     newNode = new Inverter(result);
                     break;
                 case DecoratorNodeType.Repeater:
-                    newNode = new Repeater(result);
+                    newNode = new Repeater(result, extra);
                     break;
                 case DecoratorNodeType.RepeatTillFail:
                     newNode = new RepeatTillFail(result);
@@ -268,7 +303,7 @@ namespace BehaviorTreeTest
             return a;
         }
 
-        private uint CreateActionNode(ActionNode.Do func, uint nodeID)
+        private uint CreateActionNodeWithID(ActionNode.Do func, uint nodeID)
         {
             if (m_nodeDic.ContainsKey(nodeID))
                 return 0xffffffff;   // id already exists
