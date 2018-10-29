@@ -70,7 +70,7 @@ namespace BehaviorTreeTest
             if (nodeName == "ActionNode")
             {
                 ActionNode a = (ActionNode)node;
-                output += "," + a.GetFunction().Method.Name;
+                output += "," + a.GetFunction().Method.Name + "," + a.GetFunction().Method.DeclaringType;
             }
             // decorator node
             else if (nodeName == "Inverter" || nodeName == "Repeater" || nodeName == "RepeatTillFail" || nodeName == "Limiter")
@@ -121,7 +121,7 @@ namespace BehaviorTreeTest
                     switch (data[1])
                     {
                         case "ActionNode":
-                            Type calledType = typeof(TestMethods);
+                            Type calledType = Type.GetType(data[3]);
                             MethodInfo method = calledType.GetMethod(data[2]);
                             ActionNode.Do action = Delegate.CreateDelegate(typeof(ActionNode.Do), null, method) as ActionNode.Do;
                             CreateActionNodeWithID(action, id);
@@ -312,6 +312,29 @@ namespace BehaviorTreeTest
             newNode.SetID(nodeID);
             m_nodeDic.Add(nodeID, newNode);
             return nodeID;
+        }
+
+        public void Optimise()
+        {
+            CheckForRedundantNodes();
+        }
+
+        private void CheckForRedundantNodes()
+        {
+            bool change = false;
+            // get nodes as types in pools  // reduce the number of casts
+
+            // check between pools if any similar
+
+                // match 
+                // replace references to second with first
+
+                // delete second
+
+                // set change
+
+            if (change)
+                CheckForRedundantNodes();
         }
     }
 }

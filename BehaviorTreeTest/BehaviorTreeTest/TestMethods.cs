@@ -1,4 +1,6 @@
-﻿using System;
+﻿//#define CONSOLE_OUTPUT
+
+using System;
 using System.Collections.Generic;
 
 namespace TestingNodeFunctions
@@ -11,6 +13,9 @@ namespace TestingNodeFunctions
         public NodeStates CounterInc()
         {
             counter += 1;
+            #if (CONSOLE_OUTPUT)
+                Console.WriteLine("CounterInc, counter:" + counter + ", target:" + target);
+            #endif
             return counter == target ? NodeStates.SUCCESS : NodeStates.FAILURE;
         }
 

@@ -25,11 +25,14 @@ namespace BehaviorTreeTest
             var children = new List<uint> { T2A, T2B, T2C, T2D };
             var root = firstTree.CreateCompositeNode(CompositeNodeTypes.Selector, children);
             firstTree.SetRootNode(root);
+
+            firstTree.RunTree();
             
             firstTree.SaveTree();
             secondTree.LoadTree();
             BehaviourTree thirdTree = new BehaviourTree("default.tree");
             secondTree.SaveTree("Tree2.tree");
+            thirdTree.Optimise();
             thirdTree.SaveTree("Tree3.tree");
 
             //ActionNode.Do testDelegate = new ActionNode.Do(testFunc.CounterInc);
