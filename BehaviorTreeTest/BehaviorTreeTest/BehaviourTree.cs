@@ -102,8 +102,10 @@ namespace BehaviorTreeTest
             File.AppendAllText(path, output + Environment.NewLine);
         }
 
-        public void LoadTree(string filePath = "Default.tree")
+        public bool LoadTree(string filePath = "Default.tree")
         {
+            if (!File.Exists(filePath))
+                return false;
             List<string> data;
             string[] lines = File.ReadAllLines(filePath);
             uint x;
@@ -178,6 +180,7 @@ namespace BehaviorTreeTest
                     }
                 }
             }
+            return true;
         }
 
         public void RunTree()
