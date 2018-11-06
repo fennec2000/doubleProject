@@ -1,4 +1,4 @@
-﻿//#define CONSOLE_OUTPUT
+﻿#define CONSOLE_OUTPUT
 
 using System;
 using System.Collections.Generic;
