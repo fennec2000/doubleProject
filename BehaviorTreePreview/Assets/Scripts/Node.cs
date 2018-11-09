@@ -71,7 +71,6 @@ public class Sequence : CompositeNode
 
     public override ENodeStates Run()
     {
-        bool childRunning = false;
         foreach (Node node in m_nodes)
         {
             switch (node.Run())
@@ -82,16 +81,13 @@ public class Sequence : CompositeNode
                 case ENodeStates.SUCCESS:
                     continue;
                 case ENodeStates.RUNNING:
-                    childRunning = true;
-                    continue;
+                    m_nodeState = ENodeStates.RUNNING;
+                    return m_nodeState;
                 default:
                     continue;
             }
         }
-        if (childRunning)
-            m_nodeState = ENodeStates.RUNNING;
-        else
-            m_nodeState = ENodeStates.SUCCESS;
+        m_nodeState = ENodeStates.SUCCESS;
         return m_nodeState;
     }
 }
@@ -255,10 +251,15 @@ public class Succeeder : DecoratorNode
 
     public override ENodeStates Run()
     {
-        if (m_node.Run() == ENodeStates.RUNNING)
-            m_nodeState = ENodeStates.RUNNING;
-        else
-            m_nodeState = ENodeStates.SUCCESS;
+        switch (m_node.Run())
+        {
+            case ENodeStates.RUNNING:
+                m_nodeState = ENodeStates.RUNNING;
+                break;
+            default:
+                m_nodeState = ENodeStates.SUCCESS;
+                break;
+        }
         return m_nodeState;
     }
 }
@@ -271,8 +272,15 @@ public class Failure : DecoratorNode
 
     public override ENodeStates Run()
     {
-        m_node.Run();
-        m_nodeState = ENodeStates.FAILURE;
+        switch (m_node.Run())
+        {
+            case ENodeStates.RUNNING:
+                m_nodeState = ENodeStates.RUNNING;
+                break;
+            default:
+                m_nodeState = ENodeStates.FAILURE;
+                break;
+        }
         return m_nodeState;
     }
 }
