@@ -11,7 +11,6 @@ public enum EStatsTypes { Food, Water, Heat }
 public class Think : MonoBehaviour
 {
     const float theta = 1.0f;
-
     [SerializeField]
     private Text m_GUIText;
     [SerializeField]
@@ -19,49 +18,71 @@ public class Think : MonoBehaviour
     [SerializeField]
     const float degradeCooldown = 0.3f;
     private float currentDegradeCooldown = 0;
-    private BehaviourTree m_BT;
+    private BehaviourTree bT;
     [SerializeField]
     private NavMeshAgent agent;
     private Vector3 targetPos;
     private bool haveTarget = false;
     private EStatsTypes targetType;
+    private const float btUpdate = 1.0f;
+    private float currentBTUpdate = btUpdate;
+
+    internal BehaviourTree BT
+    {
+        get
+        {
+            return bT;
+        }
+
+        set
+        {
+            bT = value;
+        }
+    }
+
 
 
     // Use this for initialization
     void Start()
     {
-        m_BT = new BehaviourTree();
-        var qFood = m_BT.CreateActionNode(IsFoodLow);
-        var gFood = m_BT.CreateActionNode(FetchFood);
+        BT = new BehaviourTree();
+        var qFood = BT.CreateActionNode(IsFoodLow);
+        var gFood = BT.CreateActionNode(FetchFood);
         var GetFoodList = new List<uint> { qFood, gFood };
 
-        var qWater = m_BT.CreateActionNode(IsWaterLow);
-        var gWater = m_BT.CreateActionNode(FetchWater);
+        var qWater = BT.CreateActionNode(IsWaterLow);
+        var gWater = BT.CreateActionNode(FetchWater);
         var GetWaterList = new List<uint> { qWater, gWater };
 
-        var qHeat = m_BT.CreateActionNode(IsHeatLow);
-        var gHeat = m_BT.CreateActionNode(FetchHeat);
+        var qHeat = BT.CreateActionNode(IsHeatLow);
+        var gHeat = BT.CreateActionNode(FetchHeat);
         var GetHeatList = new List<uint> { qHeat, gHeat };
 
-        var cFood = m_BT.CreateCompositeNode(CompositeNodeTypes.Sequence, GetFoodList);
-        var cWater = m_BT.CreateCompositeNode(CompositeNodeTypes.Sequence, GetWaterList);
-        var cHeat = m_BT.CreateCompositeNode(CompositeNodeTypes.Sequence, GetHeatList);
+        var cFood = BT.CreateCompositeNode(CompositeNodeTypes.Sequence, GetFoodList);
+        var cWater = BT.CreateCompositeNode(CompositeNodeTypes.Sequence, GetWaterList);
+        var cHeat = BT.CreateCompositeNode(CompositeNodeTypes.Sequence, GetHeatList);
 
         var resourceList = new List<uint> {
-            m_BT.CreateDecoratorNode(DecoratorNodeType.Succeeder, cFood),
-            m_BT.CreateDecoratorNode(DecoratorNodeType.Succeeder, cWater),
-            m_BT.CreateDecoratorNode(DecoratorNodeType.Succeeder, cHeat)
+            BT.CreateDecoratorNode(DecoratorNodeType.Succeeder, cFood),
+            BT.CreateDecoratorNode(DecoratorNodeType.Succeeder, cWater),
+            BT.CreateDecoratorNode(DecoratorNodeType.Succeeder, cHeat)
         };
 
-        var root = m_BT.CreateCompositeNode(CompositeNodeTypes.Sequence, resourceList);
-        m_BT.SetRootNode(root);
+        var root = BT.CreateCompositeNode(CompositeNodeTypes.Sequence, resourceList);
+        BT.SetRootNode(root);
         UpdateGUI();
     }
 	
 	// Update is called once per frame
 	void Update ()
     {
-        m_BT.RunTree();
+        currentBTUpdate -= Time.deltaTime;
+
+        if (currentBTUpdate <= 0)
+        {
+            BT.RunTree();
+            currentBTUpdate = btUpdate;
+        }
 
         if (currentDegradeCooldown <= 0)
         {

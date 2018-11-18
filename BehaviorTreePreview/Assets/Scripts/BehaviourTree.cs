@@ -10,6 +10,14 @@ using System.Reflection;
  * return 0xfffffffe; // 4294967294 // failed to create new node
  */
 
+public struct STree
+{
+    public uint id;
+    public string name;
+    public ENodeStates state;
+    public string Type;
+}
+
 enum CompositeNodeTypes
 {
     Selector,
@@ -341,6 +349,57 @@ namespace BehaviorTreeTest
 
             if (change)
                 CheckForRedundantNodes();
+        }
+
+        public List<STree> GetTree()
+        {
+            return GetTreeRec(m_rootNode);
+        }
+
+        private List<STree> GetTreeRec(Node node)
+        {
+            List<STree> sTreesList = new List<STree>();
+            STree mine;
+
+            var nodeName = node.ToString();
+            // leaf node
+            if (nodeName == "ActionNode")
+            {
+                ActionNode a = (ActionNode)node;
+                mine.id = a.GetID();
+                mine.name = a.ToString();
+                mine.state = a.NodeState;
+                mine.Type = "ActionNode";
+                sTreesList.Add(mine);
+            }
+            // decorator node
+            else if (nodeName == "Inverter" || nodeName == "Repeater" || nodeName == "RepeatTillFail" || nodeName == "Limiter" || nodeName == "Succeeder")
+            {
+                DecoratorNode d = (DecoratorNode)node;
+                mine.id = d.GetID();
+                mine.name = d.ToString();
+                mine.state = d.NodeState;
+                mine.Type = "DecoratorNode";
+                sTreesList.Add(mine);
+                sTreesList.AddRange(GetTreeRec(d.ChildNode));
+            }
+            // composite node
+            else if (nodeName == "Selector" || nodeName == "Sequence")
+            {
+                CompositeNode c = (CompositeNode)node;
+                mine.id = c.GetID();
+                mine.name = c.ToString();
+                mine.state = c.NodeState;
+                mine.Type = "CompositeNode";
+                sTreesList.Add(mine);
+
+                foreach (Node childNode in c.ChildNodeList)
+                {
+                    sTreesList.AddRange(GetTreeRec(childNode));
+                }
+            }
+
+            return sTreesList;
         }
     }
 }
