@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
+  m_IndirectSpecularColor: {r: 0.44658786, g: 0.4964227, b: 0.5748251, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -112,7 +112,7 @@ NavMeshSettings:
     accuratePlacement: 0
     debug:
       m_Flags: 0
-  m_NavMeshData: {fileID: 23800000, guid: 961168762243ce74c960a23a68bf0f2b, type: 2}
+  m_NavMeshData: {fileID: 23800000, guid: b7a25b3c8a426914e853eebd9de4c639, type: 2}
 --- !u!1 &46594192
 GameObject:
   m_ObjectHideFlags: 0
@@ -282,7 +282,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 142743301}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b3b89bf605af5884b91b1eb204b7242b, type: 3}
+  m_Script: {fileID: 11500000, guid: 5b1dc6b0737e63c40bb18c605a0de0b2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   myPowerType: 2
@@ -615,7 +615,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 241353334}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b3b89bf605af5884b91b1eb204b7242b, type: 3}
+  m_Script: {fileID: 11500000, guid: 5b1dc6b0737e63c40bb18c605a0de0b2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   myPowerType: 1
@@ -773,7 +773,7 @@ GameObject:
   - component: {fileID: 458485656}
   - component: {fileID: 458485655}
   m_Layer: 5
-  m_Name: Text
+  m_Name: GUIText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -871,7 +871,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0.006337418}
+  m_AnchoredPosition: {x: 0, y: -0.0000061914325}
   m_SizeDelta: {x: 977, y: 300}
   m_Pivot: {x: 0, y: 1}
 --- !u!1 &534669902
@@ -960,15 +960,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 534669902}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 61f7b9affdd836f4da9850ae9872bd46, type: 3}
+  m_Script: {fileID: 11500000, guid: 6c6859b7f584b414d8d3004d18943b8a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   target: {fileID: 0}
   haveTarget: 0
   LiveTreeOverlay: {fileID: 1355014712}
-  SquareTex: {fileID: 2800000, guid: 943f4c34b5aa1a344a6b4a82abb90f07, type: 3}
-  DiamondTex: {fileID: 2800000, guid: d5a8a9fcd74118a4ea8e50c986855257, type: 3}
-  CircleTex: {fileID: 2800000, guid: cb8bbcff0e0c11c4e84a237d7ba838ad, type: 3}
+  SquareTex: {fileID: 2800000, guid: 5ed4a44a4021b4236a71af859c8f6bd9, type: 3}
+  DiamondTex: {fileID: 2800000, guid: 8097bc38ae9474a0cb3675e787c833e9, type: 3}
+  CircleTex: {fileID: 2800000, guid: 44a723165f8bc4cbd987c3171c345f27, type: 3}
 --- !u!1 &641931014
 GameObject:
   m_ObjectHideFlags: 0
@@ -1099,7 +1099,7 @@ GameObject:
   - component: {fileID: 704199857}
   - component: {fileID: 704199856}
   m_Layer: 5
-  m_Name: Text
+  m_Name: CloseButtonText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1427,7 +1427,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1030561535}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b3b89bf605af5884b91b1eb204b7242b, type: 3}
+  m_Script: {fileID: 11500000, guid: 5b1dc6b0737e63c40bb18c605a0de0b2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   myPowerType: 2
@@ -1531,7 +1531,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1090960335}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b3b89bf605af5884b91b1eb204b7242b, type: 3}
+  m_Script: {fileID: 11500000, guid: 5b1dc6b0737e63c40bb18c605a0de0b2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   myPowerType: 2
@@ -1735,7 +1735,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1133486588}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b3b89bf605af5884b91b1eb204b7242b, type: 3}
+  m_Script: {fileID: 11500000, guid: 5b1dc6b0737e63c40bb18c605a0de0b2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   myPowerType: 0
@@ -1873,7 +1873,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1341921376}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b3b89bf605af5884b91b1eb204b7242b, type: 3}
+  m_Script: {fileID: 11500000, guid: 5b1dc6b0737e63c40bb18c605a0de0b2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   myPowerType: 0
@@ -2082,7 +2082,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1469387419}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b3b89bf605af5884b91b1eb204b7242b, type: 3}
+  m_Script: {fileID: 11500000, guid: 5b1dc6b0737e63c40bb18c605a0de0b2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   myPowerType: 0
@@ -2186,7 +2186,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1529724835}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b3b89bf605af5884b91b1eb204b7242b, type: 3}
+  m_Script: {fileID: 11500000, guid: 5b1dc6b0737e63c40bb18c605a0de0b2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   myPowerType: 1
@@ -2317,7 +2317,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1587752529}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aeab6bb99d5ad7c418498931d0fb4f15, type: 3}
+  m_Script: {fileID: 11500000, guid: fccf738b3513be2419bed06a1300e3bc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_GUIText: {fileID: 458485655}
@@ -2877,7 +2877,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 832005294}
   m_Direction: 2
   m_Value: 0
-  m_Size: 0.96338934
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -2960,7 +2960,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 2060375587}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b3b89bf605af5884b91b1eb204b7242b, type: 3}
+  m_Script: {fileID: 11500000, guid: 5b1dc6b0737e63c40bb18c605a0de0b2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   myPowerType: 1

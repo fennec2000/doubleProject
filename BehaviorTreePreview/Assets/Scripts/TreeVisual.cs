@@ -3,10 +3,17 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+struct SLiveTreeNode
+{
+    public GameObject nodeObject;
+    public GameObject nodeObjectText;
+    public STreeNode node;
+};
+
 public class TreeVisual : MonoBehaviour {
 
-    public GameObject target;
-    public bool haveTarget;
+    private GameObject target;
+    private bool haveTarget;
     private Camera myCamera;
     private RectTransform contentRec;
     [SerializeField]
@@ -14,9 +21,11 @@ public class TreeVisual : MonoBehaviour {
     public Texture2D SquareTex;
     public Texture2D DiamondTex;
     public Texture2D CircleTex;
+    private List<SLiveTreeNode> LiveTreeObjects;
 
     // Use this for initialization
     void Start () {
+        LiveTreeObjects = new List<SLiveTreeNode>();
         myCamera = GetComponent<Camera>();
         contentRec = LiveTreeOverlay.transform.GetChild(0).GetChild(0).GetComponent<RectTransform>();
         DisplayTree();
@@ -78,18 +87,20 @@ public class TreeVisual : MonoBehaviour {
 
         foreach(var tree in treeList)
         {
-            var go = new GameObject("Image");
-            var goText = new GameObject("Text");
-            goText.transform.SetParent(go.transform);
-            go.transform.SetParent(LiveTreeOverlay.transform.GetChild(0).GetChild(0).transform);
+            var myObj = new SLiveTreeNode();
+            myObj.nodeObject = new GameObject("Image");
+            myObj.nodeObject.transform.SetParent(LiveTreeOverlay.transform.GetChild(0).GetChild(0).transform);
 
-            Text newText = goText.AddComponent<Text>();
+            myObj.nodeObjectText = new GameObject("Text");
+            Text newText = myObj.nodeObjectText.AddComponent<Text>();
+            myObj.nodeObjectText.transform.SetParent(myObj.nodeObject.transform);
+            
             newText.text = "ID: " + tree.id + "\n" + tree.name + "\n" + tree.state;
             newText.alignment = TextAnchor.MiddleCenter;
             newText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
             newText.color = Color.black;
 
-            Image newImage = go.AddComponent<Image>();
+            Image newImage = myObj.nodeObject.AddComponent<Image>();
             switch (tree.Type)
             {
                 case "ActionNode":
@@ -120,8 +131,12 @@ public class TreeVisual : MonoBehaviour {
                     break;
             }
 
-            go.transform.localPosition = new Vector3(50 + 100 * current, -50, 0);
+            myObj.nodeObject.transform.localPosition = new Vector3(50 + 100 * current, -50, 0);
             ++current;
+
+            myObj.node = new STreeNode(tree);
+
+            LiveTreeObjects.Add(myObj);
         }
     }
 }

@@ -10,12 +10,21 @@ using System.Reflection;
  * return 0xfffffffe; // 4294967294 // failed to create new node
  */
 
-public struct STree
+public struct STreeNode
 {
     public uint id;
     public string name;
     public ENodeStates state;
     public string Type;
+    public List<uint> children;
+    public STreeNode(STreeNode a)
+    {
+        id = a.id;
+        name = a.name;
+        state = a.state;
+        Type = a.Type;
+        children = a.children;
+    }
 }
 
 enum CompositeNodeTypes
@@ -351,15 +360,16 @@ namespace BehaviorTreeTest
                 CheckForRedundantNodes();
         }
 
-        public List<STree> GetTree()
+        public List<STreeNode> GetTree()
         {
             return GetTreeRec(m_rootNode);
         }
 
-        private List<STree> GetTreeRec(Node node)
+        private List<STreeNode> GetTreeRec(Node node)
         {
-            List<STree> sTreesList = new List<STree>();
-            STree mine;
+            List<STreeNode> STreeNodesList = new List<STreeNode>();
+            STreeNode mine;
+            mine.children = new List<uint>();
 
             var nodeName = node.ToString();
             // leaf node
@@ -370,36 +380,39 @@ namespace BehaviorTreeTest
                 mine.name = a.ToString();
                 mine.state = a.NodeState;
                 mine.Type = "ActionNode";
-                sTreesList.Add(mine);
+                STreeNodesList.Add(mine);
             }
             // decorator node
             else if (nodeName == "Inverter" || nodeName == "Repeater" || nodeName == "RepeatTillFail" || nodeName == "Limiter" || nodeName == "Succeeder")
             {
                 DecoratorNode d = (DecoratorNode)node;
+                STreeNodesList.AddRange(GetTreeRec(d.ChildNode));
+
                 mine.id = d.GetID();
                 mine.name = d.ToString();
                 mine.state = d.NodeState;
                 mine.Type = "DecoratorNode";
-                sTreesList.Add(mine);
-                sTreesList.AddRange(GetTreeRec(d.ChildNode));
+                mine.children.Add(d.ChildNode.GetID());
+                STreeNodesList.Add(mine);
             }
             // composite node
             else if (nodeName == "Selector" || nodeName == "Sequence")
             {
                 CompositeNode c = (CompositeNode)node;
+                foreach (Node childNode in c.ChildNodeList)
+                {
+                    STreeNodesList.AddRange(GetTreeRec(childNode));
+                    mine.children.Add(childNode.GetID());
+                }
+
                 mine.id = c.GetID();
                 mine.name = c.ToString();
                 mine.state = c.NodeState;
                 mine.Type = "CompositeNode";
-                sTreesList.Add(mine);
-
-                foreach (Node childNode in c.ChildNodeList)
-                {
-                    sTreesList.AddRange(GetTreeRec(childNode));
-                }
+                STreeNodesList.Add(mine);
             }
 
-            return sTreesList;
+            return STreeNodesList;
         }
     }
 }
