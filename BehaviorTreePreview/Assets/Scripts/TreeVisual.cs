@@ -118,6 +118,7 @@ public class TreeVisual : MonoBehaviour {
         {
             GameObject.Destroy(child.gameObject);
         }
+        LiveTreeObjects.Clear();
 
         // get tree node list
         var treeList = target.GetComponent<Think>().BT.GetTree();
@@ -130,6 +131,17 @@ public class TreeVisual : MonoBehaviour {
             // new image
             myObj.nodeObject = new GameObject("Image");
             myObj.nodeObject.transform.SetParent(LiveTreeOverlay.transform.GetChild(0).GetChild(0).transform);
+
+            // new text for image
+            myObj.nodeObjectText = new GameObject("Text");
+            Text newText = myObj.nodeObjectText.AddComponent<Text>();
+            myObj.nodeObjectText.transform.SetParent(myObj.nodeObject.transform);
+
+            newText.text = "ID: " + tree.id + "\n" + tree.name + "\n" + tree.state;
+            newText.alignment = TextAnchor.MiddleCenter;
+            newText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            newText.color = Color.black;
+
             Image newImage = myObj.nodeObject.AddComponent<Image>();
 
             // Set image type
@@ -166,15 +178,7 @@ public class TreeVisual : MonoBehaviour {
             }
 
 
-            // new text for image
-            myObj.nodeObjectText = new GameObject("Text");
-            Text newText = myObj.nodeObjectText.AddComponent<Text>();
-            myObj.nodeObjectText.transform.SetParent(myObj.nodeObject.transform);
             
-            newText.text = "ID: " + tree.id + "\n" + tree.name + "\n" + tree.state;
-            newText.alignment = TextAnchor.MiddleCenter;
-            newText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            newText.color = Color.black;
 
             // recurcivly add child nodes
             if (tree.children.Count > 0)
