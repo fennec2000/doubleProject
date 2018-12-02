@@ -14,10 +14,8 @@ struct SLiveTreeNode
 public class TreeVisual : MonoBehaviour {
 
     private GameObject target;
-    private bool haveTarget;
     private Camera myCamera;
     private RectTransform contentRec;
-    [SerializeField]
     public GameObject LiveTreeOverlay;
     public Texture2D SquareTex;
     public Texture2D DiamondTex;
@@ -25,7 +23,6 @@ public class TreeVisual : MonoBehaviour {
     private List<SLiveTreeNode> LiveTreeObjects;
     private Vector2 shapeSize = new Vector2(100, 100);
     private Vector2 shapeSpaceSize = new Vector2(10, 10);
-    private uint lastUpdate;
 
     // Use this for initialization
     void Start () {
@@ -58,10 +55,14 @@ public class TreeVisual : MonoBehaviour {
                 }
             }
         }
+
+        // turn off the overlay if active and no target
         if (target == null && LiveTreeOverlay.activeSelf)
         {
             LiveTreeOverlay.SetActive(false);
         }
+
+        // set overlay active and update
         if (target != null)
         {
             if (!LiveTreeOverlay.activeSelf)
@@ -77,32 +78,35 @@ public class TreeVisual : MonoBehaviour {
         int LTNCount = LiveTreeObjects.Count;
         for(int i = 0; i < LTNCount; ++i)
         {
+            // update node
             if (LiveTreeObjects[i].node.id != treeList[i].id)
                 Debug.Log("Id's do not match");
-            var newNode = LiveTreeObjects[i];
-            newNode.node = treeList[i];
+            var LTOCurrent = LiveTreeObjects[i];
+            LTOCurrent.node = treeList[i];
 
-            var newText = newNode.nodeObjectText.GetComponent<Text>();
-            newText.text = "ID: " + newNode.node.id + "\n" + newNode.node.name + "\n" + newNode.node.state;
+            // update text
+            var LTOCurrentText = LTOCurrent.nodeObjectText.GetComponent<Text>();
+            LTOCurrentText.text = "ID: " + LTOCurrent.node.id + "\n" + LTOCurrent.node.name + "\n" + LTOCurrent.node.state;
 
-
-            var newNodeImage = newNode.nodeObject.GetComponent<Image>();
-            switch (newNode.node.state)
+            // update node's image colour
+            var LTOCurrentImage = LTOCurrent.nodeObject.GetComponent<Image>();
+            switch (LTOCurrent.node.state)
             {
                 case ENodeStates.FAILURE:
-                    newNodeImage.color = Color.red;
+                    LTOCurrentImage.color = Color.red;
                     break;
                 case ENodeStates.SUCCESS:
-                    newNodeImage.color = Color.green;
+                    LTOCurrentImage.color = Color.green;
                     break;
                 case ENodeStates.RUNNING:
-                    newNodeImage.color = Color.yellow;
+                    LTOCurrentImage.color = Color.yellow;
                     break;
                 default:
                     break;
             }
 
-            LiveTreeObjects[i] = newNode;
+            // store
+            LiveTreeObjects[i] = LTOCurrent;
         }
     }
 
@@ -115,24 +119,20 @@ public class TreeVisual : MonoBehaviour {
             GameObject.Destroy(child.gameObject);
         }
 
+        // get tree node list
         var treeList = target.GetComponent<Think>().BT.GetTree();
 
         foreach(var tree in treeList)
         {
+            // new object for each node
             var myObj = new SLiveTreeNode();
+
+            // new image
             myObj.nodeObject = new GameObject("Image");
             myObj.nodeObject.transform.SetParent(LiveTreeOverlay.transform.GetChild(0).GetChild(0).transform);
-
-            myObj.nodeObjectText = new GameObject("Text");
-            Text newText = myObj.nodeObjectText.AddComponent<Text>();
-            myObj.nodeObjectText.transform.SetParent(myObj.nodeObject.transform);
-            
-            newText.text = "ID: " + tree.id + "\n" + tree.name + "\n" + tree.state;
-            newText.alignment = TextAnchor.MiddleCenter;
-            newText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            newText.color = Color.black;
-
             Image newImage = myObj.nodeObject.AddComponent<Image>();
+
+            // Set image type
             switch (tree.Type)
             {
                 case "ActionNode":
@@ -149,6 +149,7 @@ public class TreeVisual : MonoBehaviour {
                     break;
             }
 
+            // set colour
             switch (tree.state)
             {
                 case ENodeStates.FAILURE:
@@ -164,6 +165,18 @@ public class TreeVisual : MonoBehaviour {
                     break;
             }
 
+
+            // new text for image
+            myObj.nodeObjectText = new GameObject("Text");
+            Text newText = myObj.nodeObjectText.AddComponent<Text>();
+            myObj.nodeObjectText.transform.SetParent(myObj.nodeObject.transform);
+            
+            newText.text = "ID: " + tree.id + "\n" + tree.name + "\n" + tree.state;
+            newText.alignment = TextAnchor.MiddleCenter;
+            newText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            newText.color = Color.black;
+
+            // recurcivly add child nodes
             if (tree.children.Count > 0)
             {
                 List<SLiveTreeNode> ChildrenObjects = new List<SLiveTreeNode>();
