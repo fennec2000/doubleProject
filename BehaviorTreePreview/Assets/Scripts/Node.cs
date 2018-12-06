@@ -8,6 +8,7 @@ public enum ENodeStates
     FAILURE,
     SUCCESS,
     RUNNING,
+    IDLE,
 }
 
 public abstract class Node
@@ -23,6 +24,7 @@ public abstract class Node
     public ENodeStates NodeState
     {
         get { return m_nodeState; }
+        set { m_nodeState = value; }
     }
 
     // constructor for a node

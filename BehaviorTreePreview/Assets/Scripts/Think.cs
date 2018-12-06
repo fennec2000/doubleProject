@@ -26,6 +26,7 @@ public class Think : MonoBehaviour
     private EStatsTypes targetType;
     private const float btUpdate = 1.0f;
     private float currentBTUpdate = btUpdate;
+    private LineRenderer myLineRenderer;
 
     internal BehaviourTree BT
     {
@@ -70,6 +71,9 @@ public class Think : MonoBehaviour
 
         var root = BT.CreateCompositeNode(CompositeNodeTypes.Sequence, resourceList);
         BT.SetRootNode(root);
+
+        myLineRenderer = GetComponent<LineRenderer>();
+
         UpdateGUI();
     }
 	
@@ -110,13 +114,33 @@ public class Think : MonoBehaviour
         }
         else
             currentDegradeCooldown -= Time.deltaTime;
+
+        if(targetPos != null)
+        {
+            myLineRenderer.SetPosition(0, this.transform.position);
+            myLineRenderer.SetPosition(1, targetPos);
+        }
     }
 
     void UpdateGUI()
     {
-        m_GUIText.text = "Food: " + m_Stats[0, 0] + '\n';
-        m_GUIText.text += "Water: " + m_Stats[1, 0] + '\n';
-        m_GUIText.text += "Heat: " + m_Stats[2, 0];
+        if (m_Stats[0, 0] < m_Stats[0, 1])
+            m_GUIText.text = "<color=red>";
+        else
+            m_GUIText.text = "<color=black>";
+        m_GUIText.text += "Food: (" + m_Stats[0, 1] + "): " + m_Stats[0, 0] + "</color>\n";
+
+        if (m_Stats[1, 0] < m_Stats[1, 1])
+            m_GUIText.text += "<color=red>";
+        else
+            m_GUIText.text += "<color=black>";
+        m_GUIText.text += "Water: (" + m_Stats[1, 1] + "): " + m_Stats[1, 0] + "</color>\n";
+
+        if (m_Stats[2, 0] < m_Stats[2, 1])
+            m_GUIText.text += "<color=red>";
+        else
+            m_GUIText.text += "<color=black>";
+        m_GUIText.text += "Heat: (" + m_Stats[2, 1] + "): " + m_Stats[2, 0] + "</color>\n";
     }
 
     public void AddPower(EStatsTypes powerType, int value)

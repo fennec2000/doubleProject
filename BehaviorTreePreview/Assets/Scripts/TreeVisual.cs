@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using BehaviorTreeTest;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -20,9 +21,10 @@ public class TreeVisual : MonoBehaviour {
     public Texture2D SquareTex;
     public Texture2D DiamondTex;
     public Texture2D CircleTex;
+    public Toggle toggle;
     private List<SLiveTreeNode> LiveTreeObjects;
     private Vector2 shapeSize = new Vector2(100, 100);
-    private Vector2 shapeSpaceSize = new Vector2(10, 10);
+    private BehaviourTree targetBT;
 
     // Use this for initialization
     void Start () {
@@ -51,6 +53,7 @@ public class TreeVisual : MonoBehaviour {
                 if (objectHit.GetComponent<Think>())
                 {
                     target = objectHit.gameObject;
+                    targetBT = target.GetComponent<Think>().BT;
                     DrawTree();
                 }
             }
@@ -73,7 +76,7 @@ public class TreeVisual : MonoBehaviour {
 
     void UpdateTree()
     {
-        var treeList = target.GetComponent<Think>().BT.GetTree();
+        var treeList = targetBT.GetTree();
 
         int LTNCount = LiveTreeObjects.Count;
         for(int i = 0; i < LTNCount; ++i)
@@ -102,6 +105,7 @@ public class TreeVisual : MonoBehaviour {
                     LTOCurrentImage.color = Color.yellow;
                     break;
                 default:
+                    LTOCurrentImage.color = Color.gray;
                     break;
             }
 
@@ -121,7 +125,7 @@ public class TreeVisual : MonoBehaviour {
         LiveTreeObjects.Clear();
 
         // get tree node list
-        var treeList = target.GetComponent<Think>().BT.GetTree();
+        var treeList = targetBT.GetTree();
 
         foreach(var tree in treeList)
         {
@@ -174,6 +178,7 @@ public class TreeVisual : MonoBehaviour {
                     newImage.color = Color.yellow;
                     break;
                 default:
+                    newImage.color = Color.gray;
                     break;
             }
 
@@ -220,5 +225,10 @@ public class TreeVisual : MonoBehaviour {
         var rootnode = LiveTreeObjects[LiveTreeObjects.Count - 1];
         contentRec.sizeDelta = rootnode.size;
         rootnode.nodeObject.transform.localPosition = new Vector3(Screen.width / 2, -shapeSize.y/2, 0);
+    }
+
+    public void ToggleSetBTIdleUpdate()
+    {
+        targetBT.UpdateIdleNodes(toggle.isOn);
     }
 }

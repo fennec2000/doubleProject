@@ -48,6 +48,7 @@ namespace BehaviorTreeTest
         private uint m_nodeID = 0;
         private Node m_rootNode = null;
         private IDictionary<uint, Node> m_nodeDic = new Dictionary<uint, Node>();
+        private bool m_IdleNodeUpdate = false;
 
         public BehaviourTree() { }
         public BehaviourTree(string filePath) { LoadTree(filePath); }
@@ -200,6 +201,9 @@ namespace BehaviorTreeTest
 
         public void RunTree()
         {
+            if (m_IdleNodeUpdate)
+                SetNodeTreeIdle(m_rootNode);
+
             m_rootNode.Run();
         }
 
@@ -413,6 +417,35 @@ namespace BehaviorTreeTest
             }
 
             return STreeNodesList;
+        }
+
+        public void UpdateIdleNodes(bool updateNodes)
+        {
+            m_IdleNodeUpdate = updateNodes;
+        }
+
+        // sets this node and its children to the idle state
+        void SetNodeTreeIdle(Node n)
+        {
+            var nodeName = n.ToString();
+
+            // decorator node
+            if (nodeName == "Inverter" || nodeName == "Repeater" || nodeName == "RepeatTillFail" || nodeName == "Limiter" || nodeName == "Succeeder")
+            {
+                DecoratorNode d = (DecoratorNode)n;
+                SetNodeTreeIdle(d.ChildNode);
+            }
+            // composite node
+            else if (nodeName == "Selector" || nodeName == "Sequence")
+            {
+                CompositeNode c = (CompositeNode)n;
+                foreach (Node childNode in c.ChildNodeList)
+                {
+                    SetNodeTreeIdle(childNode);
+                }
+            }
+
+            n.NodeState = ENodeStates.IDLE;
         }
     }
 }
