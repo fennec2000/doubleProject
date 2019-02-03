@@ -2,40 +2,63 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-class MapObject
+enum ETiles { unset, water, sand, grass }
+
+class MapObject : MonoBehaviour
 {
-    public GameObject myObject;
-    public int life;
-    public MapObject()
-    {
-        myObject = null;
-        life = 0;
-    }
+	const int tileSize = 10;
+
+	Vector2 m_Position;
+	GameObject[,] m_TileGO;
+	ETiles[,] m_TileData;
+	MapObject[] m_Neighbours;       // 8 directions clockwise, 0 north -> 7 north west
+
+	MapObject(Vector2 initPos, ETiles[,] givenTiles, MapObject[] initNeighbours, GameObject tilePrefab, Material[] materials)
+	{
+		m_Position = initPos;
+		m_TileData = givenTiles;
+		m_TileGO = new GameObject[tileSize, tileSize];
+		m_Neighbours = initNeighbours;
+
+		for(int i = 0; i < tileSize; ++i)
+		{
+			for (int j = 0; j < tileSize; ++j)
+			{
+				m_TileGO[i, j] = Instantiate(tilePrefab, initPos + new Vector2(i, j), Quaternion.identity);
+
+				switch (m_TileData[i,j])
+				{
+					case ETiles.water:
+						m_TileGO[i, j].GetComponent<Renderer>().material = materials[(int)ETiles.water];
+						break;
+					case ETiles.sand:
+						m_TileGO[i, j].GetComponent<Renderer>().material = materials[(int)ETiles.sand];
+						break;
+					case ETiles.grass:
+						m_TileGO[i, j].GetComponent<Renderer>().material = materials[(int)ETiles.grass];
+						break;
+					default:
+						break;
+				}
+				
+			}
+		}
+	}
 }
 
 public class MapSpawner : MonoBehaviour {
 
-    private MapObject[,] MapArray;
-    [SerializeField]
-    private Transform grass;
+	[SerializeField]
+	GameObject m_TilePrefab;
+
+	[SerializeField]
+	Material[] m_TileMaterials;
+
+	List<MapObject> m_TileList = new List<MapObject>();
 
 	// Use this for initialization
 	void Start () {
-        MapArray = new MapObject[7, 7];
-        for(int i = 0; i < 7; ++i)
-        {
-            int x, z;
-            do
-            {
-                x = Random.Range(0, 7);
-                z = Random.Range(0, 7);
-            } while (MapArray[x, z] != null);
 
-            var obj = new MapObject();
-            obj.myObject = Instantiate(grass, new Vector3(x*100 - 350, 0.5f, z*100 - 350), new Quaternion(), gameObject.transform).gameObject;
-            obj.life = 100;
-            MapArray[x,z] = obj;
-        }
 	}
 	
 	// Update is called once per frame
