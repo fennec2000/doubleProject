@@ -51,7 +51,14 @@ namespace BehaviorTreeTest
         private bool m_IdleNodeUpdate = false;
 
         public BehaviourTree() { }
-        public BehaviourTree(string filePath) { LoadTree(filePath); }
+        public BehaviourTree(string filePath)
+		{
+			var result = LoadTree(filePath);
+			#if UNITY_EDITOR
+				if (!result)
+					UnityEngine.Debug.Log("Failed to load Behaviour Tree.");
+			#endif
+		}
 
         public void SaveTree(string filePath = "Default.tree")
         {
@@ -119,10 +126,13 @@ namespace BehaviorTreeTest
             File.AppendAllText(path, output + Environment.NewLine);
         }
 
-        public void LoadTree(string filePath = "Default.tree")
-        {
-            List<string> data;
-            string[] lines = File.ReadAllLines(filePath);
+        public bool LoadTree(string filePath = "Default.tree")
+		{
+			if (!File.Exists(filePath))
+				return false;	// failure
+
+			List<string> data;
+			string[] lines = File.ReadAllLines(filePath);
             uint x;
             int count;
             List<uint> children = new List<uint>();
@@ -197,6 +207,7 @@ namespace BehaviorTreeTest
                     }
                 }
             }
+			return true;	// success
         }
 
         public void RunTree()
