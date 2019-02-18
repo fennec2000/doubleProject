@@ -2,23 +2,28 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-enum ETiles { unset, water, sand, grass, any }
+public enum ETiles { unset, water, sand, grass, any }
+
+public struct STile
+{
+	public Vector2Int m_Position;
+	public GameObject m_GameObject;
+	public ETiles m_TileType;
+}
 
 public class MapObject : MonoBehaviour
 {
 	const int tileSize = 10;
 
 	Vector2 m_Position;
-	GameObject[,] m_TileGO;
-	ETiles[,] m_TileData;
+	STile[,] m_Tiles;
 	MapObject[] m_Neighbours;       // 8 directions clockwise, 0 north -> 7 north west
 
 	public Vector2 GetPosition() { return m_Position; }
 
-	public MapObject[] GetNeighbours()
-	{
-		return m_Neighbours;
-	}
+	public STile GetTile(Vector2Int pos) { return m_Tiles[pos.x, pos.y]; }
+
+	public MapObject[] GetNeighbours() { return m_Neighbours; }
 
 	public void SetNeighbour(MapObject given, int direction)
 	{
@@ -29,36 +34,44 @@ public class MapObject : MonoBehaviour
 	public MapObject(Vector2 initPos, ETiles[,] givenTiles, MapObject[] initNeighbours, GameObject tilePrefab, Material[] materials, GameObject givenParent)
 	{
 		m_Position = initPos;
-		m_TileData = givenTiles;
-		m_TileGO = new GameObject[tileSize, tileSize];
-		m_Neighbours = initNeighbours;
 
-		for (int i = 0; i < 8; ++i)
-			if (m_Neighbours[i] != null)
-				m_Neighbours[i].SetNeighbour(this, (i < 4) ? i + 4 : i - 4);
-
-		for (int i = 0; i < tileSize; ++i)
+		// tiles
+		m_Tiles = new STile[tileSize, tileSize];
+		for(int i = 0; i < tileSize; ++i)
 		{
 			for (int j = 0; j < tileSize; ++j)
 			{
-				m_TileGO[i, j] = Instantiate(tilePrefab, new Vector3(initPos.x + i, 0, initPos.y + j), Quaternion.identity, givenParent.transform);
+				// position
+				m_Tiles[i, j].m_Position = new Vector2Int(i, j);
+				// type
+				m_Tiles[i, j].m_TileType = givenTiles[i, j];
+				// gameobject
+				m_Tiles[i, j].m_GameObject = Instantiate(tilePrefab, new Vector3(initPos.x + i, 0, initPos.y + j), Quaternion.identity, givenParent.transform);
 
-				switch (m_TileData[i,j])
+				// update colour
+				switch (m_Tiles[i, j].m_TileType)
 				{
 					case ETiles.water:
-						m_TileGO[i, j].GetComponent<Renderer>().material = materials[(int)ETiles.water];
+						m_Tiles[i, j].m_GameObject.GetComponent<Renderer>().material = materials[(int)ETiles.water];
 						break;
 					case ETiles.sand:
-						m_TileGO[i, j].GetComponent<Renderer>().material = materials[(int)ETiles.sand];
+						m_Tiles[i, j].m_GameObject.GetComponent<Renderer>().material = materials[(int)ETiles.sand];
 						break;
 					case ETiles.grass:
-						m_TileGO[i, j].GetComponent<Renderer>().material = materials[(int)ETiles.grass];
+						m_Tiles[i, j].m_GameObject.GetComponent<Renderer>().material = materials[(int)ETiles.grass];
 						break;
 					default:
 						break;
 				}
 			}
 		}
+
+		// neighbours
+		m_Neighbours = initNeighbours;
+
+		for (int i = 0; i < 8; ++i)
+			if (m_Neighbours[i] != null)
+				m_Neighbours[i].SetNeighbour(this, (i < 4) ? i + 4 : i - 4);
 	}
 }
 
@@ -156,7 +169,7 @@ public class MapSpawner : MonoBehaviour {
 		
 	}
 
-	public MapObject[] GetFirstTarget(Vector3 pos)
+	public STile[] GetFirstTarget(Vector3 pos)
 	{
 		var x = Mathf.FloorToInt(pos.x / 10);
 		var areaX = x / 10;
@@ -166,15 +179,30 @@ public class MapSpawner : MonoBehaviour {
 		var areaY = y / 10;
 		var gridY = y - areaX;
 
-		var result = new MapObject[2];
+		var result = new STile[2];
+
+		Vector2Int areaPos = new Vector2Int(areaX, areaY);
 
 		// old
-		result[1]
+		MapObject area;
+		for (int i = 0; i < m_TileList.Count; ++i)
+		{
+			area = m_TileList[i];
+			if (area.GetPosition() == areaPos)
+			{
+				result[1] = area.GetTile(areaPos);
+				var rand = Random.Range(0,7);
+				result[0] = area.GetTile(new Vector2Int(rand / 3 - 1, rand % 3 - 1));
+				break;
+			}
+		}
+
+
 
 		return result;
 	}
 
-	public MapObject GetNewTarget(MapObject current, MapObject old)
+	public STile GetNewTarget(STile current, STile old) // TODO update to use STile
 	{
 		// rand direction
 		int rand = Random.Range(1, 100);
