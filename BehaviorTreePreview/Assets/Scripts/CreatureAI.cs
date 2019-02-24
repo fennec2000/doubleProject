@@ -72,18 +72,29 @@ public class CreatureAI : MonoBehaviour
 
 	private BehaviourTree m_Behaviour;
 	private CCreatureStats m_Stats;
-
-	private MapObject m_Target;
-	private MapObject m_TargetLast;
+	
+	private STile m_Target;
+	private STile m_TargetLast;
 	private MapSpawner m_Map;
+	[SerializeField]
+	private Rigidbody m_Rigidbody;
 
-	private float m_TargetDistance = 1.0f;
+	private float m_TargetDistance = 0.2f;
+	private float m_Speed = 1.0f;
+	private float m_ViewDistance = 3.0f;
+	private byte m_Drain = 1;
+	private byte m_Gain = 5;
+
+	internal BehaviourTree Behaviour { get => m_Behaviour; set => m_Behaviour = value; }
 
 	public void Setup(CCreatureStats parent, MapSpawner map)
 	{
 		m_Map = map;
-		m_Behaviour = new BehaviourTree("Survive.bt");
+		CreateSurviveTree();
 		m_Stats = new CCreatureStats(parent);
+		var result = m_Map.GetFirstTarget(transform.position);
+		m_Target = result[0];
+		m_TargetLast = result[1];
 		gameObject.SetActive(true);
 	}
 
@@ -91,10 +102,31 @@ public class CreatureAI : MonoBehaviour
 	{
 		m_Behaviour = new BehaviourTree();
 
-		var move = m_Behaviour.CreateActionNode(Move);
+		// general actions
 		var action = m_Behaviour.CreateActionNode(Action);
+		var move = m_Behaviour.CreateActionNode(Move);
+		var newTarget = m_Behaviour.CreateActionNode(NewTarget);
 
-		var children = new List<uint> { move, action };
+		// medium food
+		var foodMed = m_Behaviour.CreateActionNode(FoodMed);
+		var foodBelowMed = m_Behaviour.CreateDecoratorNode(DecoratorNodeType.Inverter, foodMed);
+
+		var findFood = m_Behaviour.CreateActionNode(TargetFood);
+		var invertFindFood = m_Behaviour.CreateDecoratorNode(DecoratorNodeType.Inverter, findFood);
+
+		var medFoodFindFoodSeqList = new List<uint> { invertFindFood, move, newTarget };
+		var medFoodFindFoodSeq = m_Behaviour.CreateCompositeNode(CompositeNodeTypes.Sequence, medFoodFindFoodSeqList);
+		var repeatMedFoodFindFoodSeq = m_Behaviour.CreateDecoratorNode(DecoratorNodeType.RepeatTillFail, medFoodFindFoodSeq);
+
+		var medFoodSeqList = new List<uint> { foodBelowMed, repeatMedFoodFindFoodSeq, move, action };
+		var medFoodSeq = m_Behaviour.CreateCompositeNode(CompositeNodeTypes.Sequence, medFoodSeqList);
+
+		// Explore
+		var exploreList = new List<uint> { move, newTarget };
+		var explore = m_Behaviour.CreateCompositeNode(CompositeNodeTypes.Sequence, exploreList);
+
+		// top level
+		var children = new List<uint> { medFoodSeq, explore };
 		var root = m_Behaviour.CreateCompositeNode(CompositeNodeTypes.Selector, children);
 		m_Behaviour.SetRootNode(root);
 
@@ -107,35 +139,78 @@ public class CreatureAI : MonoBehaviour
 	}
 
 	// Update is called once per frame
-	private void Update()
+	private void FixedUpdate()
 	{
+		// Drain
+		m_Stats.Food -= m_Drain;
+
 		m_Behaviour.RunTree();
 	}
 
 	private ENodeStates Move()
 	{
-		if (m_Target == null)
+		if (m_Target.m_GameObject != null)
 		{
-			// first target
-			m_Map.GetFirstTarget();
-		}
-		else if (Vector3.Distance(transform.position, m_Target.transform.position) < m_TargetDistance)
-		{
-			// move to target
-		}
-		else
-		{
-			// new target
-			var result = m_Map.GetNewTarget(m_Target, m_TargetLast);
-			m_TargetLast = m_Target;
-			m_Target = result;
+			if (Vector3.Distance(transform.position, m_Target.m_GameObject.transform.position) > m_TargetDistance)
+			{
+				// debug
+				Debug.DrawLine(transform.position, m_Target.m_GameObject.transform.position);
+
+				// look at
+				transform.LookAt(m_Target.m_GameObject.transform);
+
+				// move to target
+				Vector3 vec = m_Target.m_GameObject.transform.position - transform.position;
+				transform.position += vec.normalized * m_Speed * Time.fixedDeltaTime;
+
+				return ENodeStates.RUNNING;
+			}
+			else
+				return ENodeStates.SUCCESS;
 		}
 
 		return ENodeStates.FAILURE;
 	}
 
+	private ENodeStates TargetFood()
+	{
+		Vector2 dirrectionVector = new Vector2(transform.forward.x, transform.forward.z);
+		var result = m_Map.CreatureTileVision(new Vector2(transform.position.x, transform.position.z), dirrectionVector.normalized * m_ViewDistance);
+
+		for(int i = 0; i < result.Count; ++i)
+		{
+			if(result[i].m_TileType == ETiles.grass)
+			{
+				m_Target = result[i];
+				return ENodeStates.SUCCESS;
+			}
+		}
+
+		return ENodeStates.FAILURE;
+	}
+
+	private ENodeStates NewTarget()
+	{
+		// new target
+		var result = m_Map.GetNewTarget(m_Target, m_TargetLast);
+		m_TargetLast = m_Target;
+		m_Target = result;
+
+		return ENodeStates.SUCCESS;
+	}
+
 	private ENodeStates Action()
 	{
+		if (Vector3.Distance(transform.position, m_Target.m_GameObject.transform.position) <= m_TargetDistance)
+		{
+			if (m_Target.m_TileType == ETiles.grass)
+			{
+				m_Target.m_TileType = ETiles.sand;
+
+				m_Stats.Food += m_Gain;
+			}
+		}
+
 		return ENodeStates.FAILURE;
 	}
 

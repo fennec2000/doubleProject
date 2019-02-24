@@ -50,10 +50,11 @@ public class TreeVisual : MonoBehaviour {
             if (Physics.Raycast(ray, out hit))
             {
                 Transform objectHit = hit.transform;
-                if (objectHit.GetComponent<Think>())
+				var creatureAI = objectHit.GetComponentInParent<CreatureAI>();
+                if (creatureAI != null)
                 {
-                    target = objectHit.gameObject;
-                    targetBT = target.GetComponent<Think>().BT;
+					target = creatureAI.gameObject;
+                    targetBT = creatureAI.Behaviour;
                     DrawTree();
                 }
             }
@@ -141,8 +142,9 @@ public class TreeVisual : MonoBehaviour {
             Text newText = myObj.nodeObjectText.AddComponent<Text>();
             myObj.nodeObjectText.transform.SetParent(myObj.nodeObject.transform);
 
-            newText.text = "ID: " + tree.id + "\n" + tree.name + "\n" + tree.state;
-            newText.alignment = TextAnchor.MiddleCenter;
+
+			newText.text = "ID: " + tree.id + "\n" + tree.name + "\n" + tree.state;
+			newText.alignment = TextAnchor.MiddleCenter;
             newText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
             newText.color = Color.black;
 

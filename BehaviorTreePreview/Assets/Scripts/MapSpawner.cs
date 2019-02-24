@@ -9,9 +9,10 @@ public struct STile
 	public Vector2Int m_Position;
 	public GameObject m_GameObject;
 	public ETiles m_TileType;
+
 }
 
-public class MapObject : MonoBehaviour
+public class MapObject : ScriptableObject
 {
 	const int tileSize = 10;
 
@@ -21,7 +22,47 @@ public class MapObject : MonoBehaviour
 
 	public Vector2 GetPosition() { return m_Position; }
 
-	public STile GetTile(Vector2Int pos) { return m_Tiles[pos.x, pos.y]; }
+	public STile GetTile(Vector2Int pos)
+	{
+		// get area and pos in area
+		int x = 0;
+		int y = 0;
+		while (pos.x > tileSize - 1) { pos.x -= tileSize; ++x; }
+		while (pos.y > tileSize - 1) { pos.y -= tileSize; ++y; }
+		while (pos.x < 0) { pos.x += tileSize; --x; }
+		while (pos.y < 0) { pos.y += tileSize; --y; }
+
+		return ReturnTile(new Vector2Int(x, y), pos);
+	}
+
+	public STile ReturnTile(Vector2Int area, Vector2Int pos)
+	{
+		if (area.x > 0 && m_Neighbours[2] != null)
+		{
+			--area.x;
+			return m_Neighbours[2].ReturnTile(area, pos);
+		}
+
+		if (area.x < 0 && m_Neighbours[6] != null)
+		{
+			++area.x;
+			return m_Neighbours[6].ReturnTile(area, pos);
+		}
+
+		if (area.y > 0 && m_Neighbours[0] != null)
+		{
+			--area.y;
+			return m_Neighbours[0].ReturnTile(area, pos);
+		}
+
+		if (area.y < 0 && m_Neighbours[4] != null)
+		{
+			++area.y;
+			return m_Neighbours[4].ReturnTile(area, pos);
+		}
+
+		return m_Tiles[pos.x, pos.y];
+	}
 
 	public MapObject[] GetNeighbours() { return m_Neighbours; }
 
@@ -31,8 +72,164 @@ public class MapObject : MonoBehaviour
 			m_Neighbours[direction] = given;
 	}
 
+	public bool ContainsTile(STile tile)
+	{
+		return (m_Tiles[tile.m_Position.x, tile.m_Position.y].Equals(tile)) ? true : false;
+	}
+
+	public List<STile> GetTileNeighbours(STile tile) 
+	{
+		// 8 directions clockwise, 0 north -> 7 north west
+		var result = new List<STile>(); 
+		bool[] dirChecks = new bool[4]; // NESW
+
+		// grid is tileSize x tileSize
+		if (tile.m_Position.y < tileSize - 1)
+			dirChecks[0] = true;
+		if (tile.m_Position.x < tileSize - 1)
+			dirChecks[1] = true;
+		if (tile.m_Position.y > 0)
+			dirChecks[2] = true;
+		if (tile.m_Position.x > 0)
+			dirChecks[3] = true;
+
+		if (dirChecks[0] && dirChecks[1] && dirChecks[2] && dirChecks[3])
+		{
+			return new List<STile>() {
+				m_Tiles[tile.m_Position.x,		tile.m_Position.y + 1],
+				m_Tiles[tile.m_Position.x + 1,	tile.m_Position.y + 1],
+				m_Tiles[tile.m_Position.x + 1,	tile.m_Position.y	 ],
+				m_Tiles[tile.m_Position.x + 1,	tile.m_Position.y - 1],
+				m_Tiles[tile.m_Position.x,		tile.m_Position.y - 1],
+				m_Tiles[tile.m_Position.x - 1,	tile.m_Position.y - 1],
+				m_Tiles[tile.m_Position.x - 1,	tile.m_Position.y	 ],
+				m_Tiles[tile.m_Position.x - 1,	tile.m_Position.y + 1]
+			};
+		}
+		
+		else
+		{
+			// 0 1
+			if (dirChecks[0])
+			{
+				result.Add(m_Tiles[tile.m_Position.x, tile.m_Position.y + 1]);
+
+				if (dirChecks[1])
+				{
+					result.Add(m_Tiles[tile.m_Position.x + 1, tile.m_Position.y + 1]);
+				}
+				else
+				{
+					result.Add(m_Neighbours[2].m_Tiles[0, tile.m_Position.y + 1]);
+				}
+			}
+			else
+			{
+				result.Add(m_Neighbours[0].m_Tiles[tile.m_Position.x, 0]);
+
+				if (dirChecks[1])
+				{
+					result.Add(m_Neighbours[0].m_Tiles[tile.m_Position.x + 1, 0]);
+				}
+				else
+				{
+					result.Add(m_Neighbours[1].m_Tiles[0, 0]);
+				}
+			}
+
+			// 2 3
+			if (dirChecks[1])
+			{
+				result.Add(m_Tiles[tile.m_Position.x + 1, tile.m_Position.y]);
+
+				if (dirChecks[2])
+				{
+					result.Add(m_Tiles[tile.m_Position.x + 1, tile.m_Position.y - 1]);
+				}
+				else
+				{
+					result.Add(m_Neighbours[4].m_Tiles[tile.m_Position.x + 1, tileSize - 1]);
+				}
+
+			}
+			else
+			{
+				result.Add(m_Neighbours[2].m_Tiles[0, tile.m_Position.y]);
+
+				if (dirChecks[2])
+				{
+					result.Add(m_Neighbours[2].m_Tiles[0, tile.m_Position.y - 1]);
+				}
+				else
+				{
+					result.Add(m_Neighbours[3].m_Tiles[0, tileSize - 1]);
+				}
+			}
+
+			// 4 5
+			if (dirChecks[2])
+			{
+				result.Add(m_Tiles[tile.m_Position.x, tile.m_Position.y - 1]);
+
+				if (dirChecks[3])
+				{
+					result.Add(m_Tiles[tile.m_Position.x - 1, tile.m_Position.y - 1]);
+				}
+				else
+				{
+					result.Add(m_Neighbours[6].m_Tiles[tileSize - 1, tile.m_Position.y - 1]);
+				}
+			}
+			else
+			{
+				result.Add(m_Neighbours[4].m_Tiles[tile.m_Position.x, tileSize - 1]);
+
+				if (dirChecks[3])
+				{
+					result.Add(m_Neighbours[4].m_Tiles[tile.m_Position.x - 1, tileSize - 1]);
+				}
+				else
+				{
+					result.Add(m_Neighbours[5].m_Tiles[tileSize - 1, tileSize - 1]);
+				}
+			}
+
+			// 6 7
+			if (dirChecks[3])
+			{
+				result.Add(m_Tiles[tile.m_Position.x - 1, tile.m_Position.y]);
+
+				if (dirChecks[0])
+				{
+					result.Add(m_Tiles[tile.m_Position.x - 1, tile.m_Position.y + 1]);
+				}
+				else
+				{
+					result.Add(m_Neighbours[0].m_Tiles[tile.m_Position.x - 1, 0]);
+				}
+			}
+			else
+			{
+				result.Add(m_Neighbours[6].m_Tiles[tileSize - 1, tile.m_Position.y]);
+
+				if (dirChecks[0])
+				{
+					result.Add(m_Neighbours[6].m_Tiles[tileSize - 1, tile.m_Position.y + 1]);
+				}
+				else
+				{
+					result.Add(m_Neighbours[7].m_Tiles[tileSize - 1, 0]);
+				}
+			}
+		}
+
+		return result;
+	}
+
 	public MapObject(Vector2 initPos, ETiles[,] givenTiles, MapObject[] initNeighbours, GameObject tilePrefab, Material[] materials, GameObject givenParent)
 	{
+		GameObject newGO = new GameObject("Area");
+		newGO.transform.SetParent(givenParent.transform);
 		m_Position = initPos;
 
 		// tiles
@@ -46,7 +243,7 @@ public class MapObject : MonoBehaviour
 				// type
 				m_Tiles[i, j].m_TileType = givenTiles[i, j];
 				// gameobject
-				m_Tiles[i, j].m_GameObject = Instantiate(tilePrefab, new Vector3(initPos.x + i, 0, initPos.y + j), Quaternion.identity, givenParent.transform);
+				m_Tiles[i, j].m_GameObject = Instantiate(tilePrefab, new Vector3(initPos.x + i, 0, initPos.y + j), Quaternion.identity, newGO.transform);
 
 				// update colour
 				switch (m_Tiles[i, j].m_TileType)
@@ -155,12 +352,17 @@ public class MapSpawner : MonoBehaviour {
 
 	MapObject[] GetNeighbours(Vector2 pos)
 	{
-		var x = pos.x;
-		var y = pos.y;
+		var x = pos.x * 10;
+		var y = pos.y * 10;
 		return new MapObject[] {
-			GetMapObjectPos(new Vector2(x-1, y+1)), GetMapObjectPos(new Vector2(x, y+1)), GetMapObjectPos(new Vector2(x+1, y+1)),
-			GetMapObjectPos(new Vector2(x-1, y)),										  GetMapObjectPos(new Vector2(x+1, y)),
-			GetMapObjectPos(new Vector2(x-1, y-1)), GetMapObjectPos(new Vector2(x, y-1)), GetMapObjectPos(new Vector2(x+1, y-1))
+			GetMapObjectPos(new Vector2(x, y+10)),
+			GetMapObjectPos(new Vector2(x+10, y+10)),
+			GetMapObjectPos(new Vector2(x+10, y)),
+			GetMapObjectPos(new Vector2(x+10, y-10)),
+			GetMapObjectPos(new Vector2(x, y-10)),
+			GetMapObjectPos(new Vector2(x-10, y-10)),
+			GetMapObjectPos(new Vector2(x-10, y)),
+			GetMapObjectPos(new Vector2(x-10, y+10))
 		};
 	}
 
@@ -171,35 +373,54 @@ public class MapSpawner : MonoBehaviour {
 
 	public STile[] GetFirstTarget(Vector3 pos)
 	{
-		var x = Mathf.FloorToInt(pos.x / 10);
-		var areaX = x / 10;
+		// get section
+		var x = Mathf.FloorToInt(pos.x);
+		var areaX = (x / 10) * 10;
 		var gridX = x - areaX;
 
-		var y = Mathf.FloorToInt(pos.z / 10);
-		var areaY = y / 10;
+		var y = Mathf.FloorToInt(pos.z);
+		var areaY = (y / 10) * 10;
 		var gridY = y - areaX;
-
-		var result = new STile[2];
 
 		Vector2Int areaPos = new Vector2Int(areaX, areaY);
 
-		// old
+		// gerate results
+		var result = new STile[2];
 		MapObject area;
+
 		for (int i = 0; i < m_TileList.Count; ++i)
 		{
 			area = m_TileList[i];
 			if (area.GetPosition() == areaPos)
 			{
-				result[1] = area.GetTile(areaPos);
+				result[1] = area.GetTile(new Vector2Int(gridX, gridY));
 				var rand = Random.Range(0,7);
-				result[0] = area.GetTile(new Vector2Int(rand / 3 - 1, rand % 3 - 1));
+				var nextTarget = new Vector2Int(gridX + rand / 3 - 1, gridY + rand % 3 - 1);
+				result[0] = area.GetTile(nextTarget);
 				break;
 			}
 		}
 
-
-
 		return result;
+	}
+
+	public MapObject GetArea(Vector2 pos)
+	{
+		pos.x = Mathf.FloorToInt(pos.x / 10 * 10);
+		pos.y = Mathf.FloorToInt(pos.y / 10 * 10);
+		MapObject area;
+
+		for (int i = 0; i < m_TileList.Count; ++i)
+		{
+			area = m_TileList[i];
+			if (area.GetPosition() == pos)
+			{
+				return area;
+			}
+		}
+
+		Debug.Log("GetArea Could not find area.");
+		return m_TileList[0];
 	}
 
 	public STile GetNewTarget(STile current, STile old) // TODO update to use STile
@@ -207,43 +428,80 @@ public class MapSpawner : MonoBehaviour {
 		// rand direction
 		int rand = Random.Range(1, 100);
 
-		if (rand == 1)  // back
+		// dirrections
+		if (rand <= 1)  // back
 			return old;
 
-		// find dirrections
-		var n = old.GetNeighbours();
-		int i = 0; 
-		while (i <= n.Length)
+
+		MapObject currentMapObject = null;
+		var numOfTiles = m_TileList.Count;
+		for (int i = 0; i < numOfTiles; ++i)
 		{
-			if (n[i] == old)
+			if (m_TileList[i].ContainsTile(current))
+			{
+				currentMapObject = m_TileList[i];
 				break;
-
-			if (i == n.Length)
-				i = -1;		// not found old tile is not next to current tile
-
-			++i;
+			}
 		}
 
+		if (rand > 75 && rand <= 100) // forward
+			return currentMapObject.GetTile(current.m_Position + current.m_Position - old.m_Position);
 
-		if (rand > 1 && rand <= 5)	// back left
-			return n[(i + 1) % 8];
+		var n = currentMapObject.GetTileNeighbours(current);
+		int p = 0;	// the position / forward direction
 
-		else if (rand > 9 && rand <= 24) // left
-			return n[(i + 2) % 8];
-
-		else if (rand > 39 && rand <= 57) // forward left
-			return n[(i + 3) % 8];
-
-		else if (rand > 57 && rand <= 75) // forward right
-			return n[(i + 5) % 8];
+		for (int i = 0; i < 8; ++i) // only ever 8 neighbours
+			if (n[i].Equals(old))
+				p = 4 + i;
+		
+		if (rand > 57 && rand <= 75) // forward right
+			return n[(p + 1) % 8];
 
 		else if (rand > 24 && rand <= 39) // right
-			return n[(i + 6) % 8];
+			return n[(p + 2) % 8];
 
 		else if (rand > 5 && rand <= 9) // back right
-			return n[(i + 7) % 8];
+			return n[(p + 3) % 8];
 
-		else // 75 > 100 // forward
-			return n[(i + 4) % 8];
+		// back is old and is done asap
+
+		else if (rand > 1 && rand <= 5) // back left
+			return n[(p + 5) % 8];
+
+		else if (rand > 9 && rand <= 24) // left
+			return n[(p + 6) % 8];
+
+		else if (rand > 39 && rand <= 57) // forward left
+			return n[(p + 7) % 8];
+
+		else
+		{
+			// something went wrong
+			Debug.Log("Get new target didnt get return dirrection");
+			return current;
+		}
+	}
+
+	public List<STile> CreatureTileVision(Vector2 pos, Vector2 visionVector)
+	{
+		var correctedPos = new Vector2Int(Mathf.RoundToInt(pos.x), Mathf.RoundToInt(pos.y));
+		var visionEnd = new Vector2Int(Mathf.RoundToInt(pos.x + visionVector.x), Mathf.RoundToInt(pos.y + visionVector.y));
+		var result = new List<STile>();
+
+		var area = GetArea(new Vector2(0, 0));
+
+		var iMax = Mathf.Max(correctedPos.x, visionEnd.x);
+		var jMax = Mathf.Max(correctedPos.y, visionEnd.y);
+
+		for (int i = Mathf.Min(correctedPos.x, visionEnd.x); i < iMax; ++i)
+		{
+			for (int j = Mathf.Min(correctedPos.y, visionEnd.y); j < jMax; ++j)
+			{
+
+				result.Add(area.GetTile(new Vector2Int(i, j)));
+			}
+		}
+
+		return result;
 	}
 }

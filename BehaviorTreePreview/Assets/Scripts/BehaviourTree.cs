@@ -392,7 +392,7 @@ namespace BehaviorTreeTest
             {
                 ActionNode a = (ActionNode)node;
                 mine.id = a.GetID();
-                mine.name = a.ToString();
+				mine.name = a.GetFunction().GetMethodInfo().Name;
                 mine.state = a.NodeState;
                 mine.Type = "ActionNode";
                 STreeNodesList.Add(mine);
