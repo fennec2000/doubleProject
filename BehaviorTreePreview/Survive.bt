@@ -2,9 +2,9 @@
 5,Inverter,4
 6,ActionNode,TargetFood,CreatureAI
 7,Inverter,6
-3,ActionNode,NewTarget,CreatureAI
 2,ActionNode,Move,CreatureAI
-8,Sequence,7,3,2
+3,ActionNode,NewTarget,CreatureAI
+8,Sequence,7,2,3
 9,RepeatTillFail,8
 1,ActionNode,Action,CreatureAI
 10,Sequence,5,9,2,1

@@ -425,13 +425,10 @@ public class MapSpawner : MonoBehaviour {
 
 	public STile GetNewTarget(STile current, STile old) // TODO update to use STile
 	{
+		STile result = old;
+
 		// rand direction
 		int rand = Random.Range(1, 100);
-
-		// dirrections
-		if (rand <= 1)  // back
-			return old;
-
 
 		MapObject currentMapObject = null;
 		var numOfTiles = m_TileList.Count;
@@ -445,7 +442,7 @@ public class MapSpawner : MonoBehaviour {
 		}
 
 		if (rand > 75 && rand <= 100) // forward
-			return currentMapObject.GetTile(current.m_Position + current.m_Position - old.m_Position);
+			result = currentMapObject.GetTile(current.m_Position + current.m_Position - old.m_Position);
 
 		var n = currentMapObject.GetTileNeighbours(current);
 		int p = 0;	// the position / forward direction
@@ -455,24 +452,24 @@ public class MapSpawner : MonoBehaviour {
 				p = 4 + i;
 		
 		if (rand > 57 && rand <= 75) // forward right
-			return n[(p + 1) % 8];
+			result = n[(p + 1) % 8];
 
 		else if (rand > 24 && rand <= 39) // right
-			return n[(p + 2) % 8];
+			result = n[(p + 2) % 8];
 
 		else if (rand > 5 && rand <= 9) // back right
-			return n[(p + 3) % 8];
+			result = n[(p + 3) % 8];
 
 		// back is old and is done asap
 
 		else if (rand > 1 && rand <= 5) // back left
-			return n[(p + 5) % 8];
+			result = n[(p + 5) % 8];
 
 		else if (rand > 9 && rand <= 24) // left
-			return n[(p + 6) % 8];
+			result = n[(p + 6) % 8];
 
 		else if (rand > 39 && rand <= 57) // forward left
-			return n[(p + 7) % 8];
+			result = n[(p + 7) % 8];
 
 		else
 		{
@@ -480,6 +477,26 @@ public class MapSpawner : MonoBehaviour {
 			Debug.Log("Get new target didnt get return dirrection");
 			return current;
 		}
+
+		// if its not water its fine
+		if (result.m_TileType != ETiles.water)
+			return result;
+
+		// if its water find a non water tile
+		List<STile> nonWaterTiles = new List<STile>();
+		for(int i = 0; i < n.Count; ++i)
+		{
+			if (n[i].m_TileType != ETiles.water)
+				nonWaterTiles.Add(n[i]);
+		}
+
+		if (nonWaterTiles.Count > 0)
+		{
+			rand = Random.Range(0, nonWaterTiles.Count);
+			return nonWaterTiles[rand];
+		}
+		else
+			return old;
 	}
 
 	public List<STile> CreatureTileVision(Vector2 pos, Vector2 visionVector)
