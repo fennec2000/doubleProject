@@ -440,9 +440,7 @@ public class MapSpawner : MonoBehaviour {
 				break;
 			}
 		}
-
-		if (rand > 75 && rand <= 100) // forward
-			result = currentMapObject.GetTile(current.m_Position + current.m_Position - old.m_Position);
+		
 
 		var n = currentMapObject.GetTileNeighbours(current);
 		int p = 0;	// the position / forward direction
@@ -450,8 +448,10 @@ public class MapSpawner : MonoBehaviour {
 		for (int i = 0; i < 8; ++i) // only ever 8 neighbours
 			if (n[i].Equals(old))
 				p = 4 + i;
-		
-		if (rand > 57 && rand <= 75) // forward right
+		if (rand > 75 && rand <= 100) // forward
+			result = currentMapObject.GetTile(current.m_Position + current.m_Position - old.m_Position);
+
+		else if (rand > 57 && rand <= 75) // forward right
 			result = n[(p + 1) % 8];
 
 		else if (rand > 24 && rand <= 39) // right

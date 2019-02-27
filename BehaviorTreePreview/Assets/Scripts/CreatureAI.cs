@@ -161,12 +161,17 @@ public class CreatureAI : MonoBehaviour
 
 				// move to target
 				Vector3 vec = m_Target.m_GameObject.transform.position - transform.position;
-				transform.position += vec.normalized * m_Speed * Time.fixedDeltaTime;
+				var dist = vec.normalized * m_Speed * Time.deltaTime;
+
+				if (dist.magnitude > vec.magnitude)
+					transform.position += vec;
+				else
+					transform.position += dist;
 
 				return ENodeStates.RUNNING;
 			}
-			else
-				return ENodeStates.SUCCESS;
+
+			return ENodeStates.SUCCESS;
 		}
 
 		return ENodeStates.FAILURE;
