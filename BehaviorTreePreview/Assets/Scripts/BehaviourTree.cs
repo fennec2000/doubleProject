@@ -16,7 +16,7 @@ public struct STreeNode
     public string name;
     public ENodeStates state;
     public string Type;
-    public List<uint> children;
+    public List<STreeNode> children;
     public STreeNode(STreeNode a)
     {
         id = a.id;
@@ -375,62 +375,54 @@ namespace BehaviorTreeTest
                 CheckForRedundantNodes();
         }
 
-        public List<STreeNode> GetTree()
-        {
-            return GetTreeRec(m_rootNode);
-        }
+		public STreeNode GetRootTreeNode()
+		{
+			return GetTreeNode(m_rootNode);
+		}
 
-        private List<STreeNode> GetTreeRec(Node node)
-        {
-            List<STreeNode> STreeNodesList = new List<STreeNode>();
-            STreeNode mine;
-            mine.children = new List<uint>();
+		STreeNode GetTreeNode(Node node)
+		{
+			STreeNode mine = new STreeNode();
+			var nodeName = node.ToString();
 
-            var nodeName = node.ToString();
-            // leaf node
-            if (nodeName == "ActionNode")
-            {
-                ActionNode a = (ActionNode)node;
-                mine.id = a.GetID();
+			// leaf node
+			if (nodeName == "ActionNode")
+			{
+				ActionNode a = (ActionNode)node;
+				mine.id = a.GetID();
 				mine.name = a.GetFunction().GetMethodInfo().Name;
-                mine.state = a.NodeState;
-                mine.Type = "ActionNode";
-                STreeNodesList.Add(mine);
-            }
-            // decorator node
-            else if (nodeName == "Inverter" || nodeName == "Repeater" || nodeName == "RepeatTillFail" || nodeName == "Limiter" || nodeName == "Succeeder")
-            {
-                DecoratorNode d = (DecoratorNode)node;
-                STreeNodesList.AddRange(GetTreeRec(d.ChildNode));
+				mine.state = a.NodeState;
+				mine.Type = "ActionNode";
+			}
+			// decorator node
+			else if (nodeName == "Inverter" || nodeName == "Repeater" || nodeName == "RepeatTillFail" || nodeName == "Limiter" || nodeName == "Succeeder")
+			{
+				DecoratorNode d = (DecoratorNode)node;
 
-                mine.id = d.GetID();
-                mine.name = d.ToString();
-                mine.state = d.NodeState;
-                mine.Type = "DecoratorNode";
-                mine.children.Add(d.ChildNode.GetID());
-                STreeNodesList.Add(mine);
-            }
-            // composite node
-            else if (nodeName == "Selector" || nodeName == "Sequence")
-            {
-                CompositeNode c = (CompositeNode)node;
-                foreach (Node childNode in c.ChildNodeList)
-                {
-                    STreeNodesList.AddRange(GetTreeRec(childNode));
-                    mine.children.Add(childNode.GetID());
-                }
+				mine.id = d.GetID();
+				mine.name = d.ToString();
+				mine.state = d.NodeState;
+				mine.Type = "DecoratorNode";
+				mine.children = new List<STreeNode>() { GetTreeNode( d.ChildNode ) };
+			}
+			// composite node
+			else if (nodeName == "Selector" || nodeName == "Sequence")
+			{
+				CompositeNode c = (CompositeNode)node;
+				
+				mine.id = c.GetID();
+				mine.name = c.ToString();
+				mine.state = c.NodeState;
+				mine.Type = "CompositeNode";
+				mine.children = new List<STreeNode>();
+				foreach (Node childNode in c.ChildNodeList)
+					mine.children.Add(GetTreeNode(childNode));
+			}
 
-                mine.id = c.GetID();
-                mine.name = c.ToString();
-                mine.state = c.NodeState;
-                mine.Type = "CompositeNode";
-                STreeNodesList.Add(mine);
-            }
+			return mine;
+		}
 
-            return STreeNodesList;
-        }
-
-        public void UpdateIdleNodes(bool updateNodes)
+		public void UpdateIdleNodes(bool updateNodes)
         {
             m_IdleNodeUpdate = updateNodes;
         }

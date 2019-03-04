@@ -77,42 +77,42 @@ public class TreeVisual : MonoBehaviour {
 
     void UpdateTree()
     {
-        var treeList = targetBT.GetTree();
+        //var treeList = targetBT.GetTree();
 
-        int LTNCount = LiveTreeObjects.Count;
-        for(int i = 0; i < LTNCount; ++i)
-        {
-            // update node
-            if (LiveTreeObjects[i].node.id != treeList[i].id)
-                Debug.Log("Id's do not match");
-            var LTOCurrent = LiveTreeObjects[i];
-            LTOCurrent.node = treeList[i];
+        //int LTNCount = LiveTreeObjects.Count;
+        //for(int i = 0; i < LTNCount; ++i)
+        //{
+        //    // update node
+        //    if (LiveTreeObjects[i].node.id != treeList[i].id)
+        //        Debug.Log("Id's do not match");
+        //    var LTOCurrent = LiveTreeObjects[i];
+        //    LTOCurrent.node = treeList[i];
 
-            // update text
-            var LTOCurrentText = LTOCurrent.nodeObjectText.GetComponent<Text>();
-            LTOCurrentText.text = "ID: " + LTOCurrent.node.id + "\n" + LTOCurrent.node.name + "\n" + LTOCurrent.node.state;
+        //    // update text
+        //    var LTOCurrentText = LTOCurrent.nodeObjectText.GetComponent<Text>();
+        //    LTOCurrentText.text = "ID: " + LTOCurrent.node.id + "\n" + LTOCurrent.node.name + "\n" + LTOCurrent.node.state;
 
-            // update node's image colour
-            var LTOCurrentImage = LTOCurrent.nodeObject.GetComponent<Image>();
-            switch (LTOCurrent.node.state)
-            {
-                case ENodeStates.FAILURE:
-                    LTOCurrentImage.color = Color.red;
-                    break;
-                case ENodeStates.SUCCESS:
-                    LTOCurrentImage.color = Color.green;
-                    break;
-                case ENodeStates.RUNNING:
-                    LTOCurrentImage.color = Color.yellow;
-                    break;
-                default:
-                    LTOCurrentImage.color = Color.gray;
-                    break;
-            }
+        //    // update node's image colour
+        //    var LTOCurrentImage = LTOCurrent.nodeObject.GetComponent<Image>();
+        //    switch (LTOCurrent.node.state)
+        //    {
+        //        case ENodeStates.FAILURE:
+        //            LTOCurrentImage.color = Color.red;
+        //            break;
+        //        case ENodeStates.SUCCESS:
+        //            LTOCurrentImage.color = Color.green;
+        //            break;
+        //        case ENodeStates.RUNNING:
+        //            LTOCurrentImage.color = Color.yellow;
+        //            break;
+        //        default:
+        //            LTOCurrentImage.color = Color.gray;
+        //            break;
+        //    }
 
-            // store
-            LiveTreeObjects[i] = LTOCurrent;
-        }
+        //    // store
+        //    LiveTreeObjects[i] = LTOCurrent;
+        //}
     }
 
     void DrawTree()
@@ -125,109 +125,150 @@ public class TreeVisual : MonoBehaviour {
         }
         LiveTreeObjects.Clear();
 
-        // get tree node list
-        var treeList = targetBT.GetTree();
+		// get tree node list
+		var rootNode = targetBT.GetRootTreeNode();
 
-        foreach(var tree in treeList)
-        {
-            // new object for each node
-            var myObj = new SLiveTreeNode();
+		var firstNode = DrawNode(rootNode);
 
-            // new image
-            myObj.nodeObject = new GameObject("Image");
-            myObj.nodeObject.transform.SetParent(LiveTreeOverlay.transform.GetChild(0).GetChild(0).transform);
+		contentRec.sizeDelta = firstNode.size;
+		firstNode.nodeObject.transform.localPosition = new Vector3(firstNode.size.x / 2, -shapeSize.y, 0);
 
-            // new text for image
-            myObj.nodeObjectText = new GameObject("Text");
-            Text newText = myObj.nodeObjectText.AddComponent<Text>();
-            myObj.nodeObjectText.transform.SetParent(myObj.nodeObject.transform);
+		//foreach (var tree in treeList)
+		//      {
+
+		//	// draw
+		//	DrawNode(myObj, tree);
+
+		//          // recurcivly add child nodes
+		//          if (tree.children.Count > 0)
+		//          {
+		//              List<SLiveTreeNode> ChildrenObjects = new List<SLiveTreeNode>();
+		//              float sizecount = 0;
+		//              float largesty = shapeSize.y;
+
+		//              foreach (uint childID in tree.children)
+		//              {
+		//                  foreach (SLiveTreeNode NodeObject in LiveTreeObjects)
+		//                  {
+		//                      if (childID == NodeObject.node.id)
+		//                      {
+		//                          NodeObject.nodeObject.transform.SetParent(myObj.nodeObject.transform);
+		//                          ChildrenObjects.Add(NodeObject);
+		//                          sizecount += NodeObject.size.x;
+		//                          if (NodeObject.size.y > largesty)
+		//                              largesty = NodeObject.size.y;
+		//                      }
+		//                  }
+		//              }
+
+		//              myObj.size = new Vector2(sizecount, shapeSize.y + largesty);
+		//              float startingPoint = sizecount * -0.5f;
+
+		//              foreach (SLiveTreeNode n in ChildrenObjects)
+		//              {
+		//                  float localxpos = startingPoint + n.size.x / 2;
+		//                  n.nodeObject.transform.localPosition = new Vector3(localxpos, -shapeSize.y, 0);
+		//                  startingPoint += n.size.x;
+		//              }
+		//          }
+
+		//          myObj.node = new STreeNode(tree);
+		//          LiveTreeObjects.Add(myObj);
+		//      }
+
+		//      var rootnode = LiveTreeObjects[LiveTreeObjects.Count - 1];
+		//      contentRec.sizeDelta = rootnode.size;
+		//      rootnode.nodeObject.transform.localPosition = new Vector3(Screen.width / 2, -shapeSize.y/2, 0);
+	}
+
+	SLiveTreeNode DrawNode(STreeNode tree)
+	{
+		// new object for each node
+		var myObj = new SLiveTreeNode();
+		myObj.node = tree;
+
+		// new image
+		myObj.nodeObject = new GameObject("Image");
+		myObj.nodeObject.transform.SetParent(LiveTreeOverlay.transform.GetChild(0).GetChild(0).transform);
+
+		// new text for image
+		myObj.nodeObjectText = new GameObject("Text");
+		Text newText = myObj.nodeObjectText.AddComponent<Text>();
+		myObj.nodeObjectText.transform.SetParent(myObj.nodeObject.transform);
 
 
-			newText.text = "ID: " + tree.id + "\n" + tree.name + "\n" + tree.state;
-			newText.alignment = TextAnchor.MiddleCenter;
-            newText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            newText.color = Color.black;
+		newText.text = "ID: " + tree.id + "\n" + tree.name + "\n" + tree.state;
+		newText.alignment = TextAnchor.MiddleCenter;
+		newText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+		newText.color = Color.black;
 
-            Image newImage = myObj.nodeObject.AddComponent<Image>();
+		Image newImage = myObj.nodeObject.AddComponent<Image>();
 
-            // Set image type
-            switch (tree.Type)
-            {
-                case "ActionNode":
-                    newImage.sprite = Sprite.Create(CircleTex, new Rect(0.0f, 0.0f, CircleTex.width, CircleTex.height), new Vector2(0.5f, 0.5f), 100.0f);
-                    myObj.size = shapeSize;
-                    break;
-                case "DecoratorNode":
-                    newImage.sprite = Sprite.Create(DiamondTex, new Rect(0.0f, 0.0f, DiamondTex.width, DiamondTex.height), new Vector2(0.5f, 0.5f), 100.0f);
-                    break;
-                case "CompositeNode":
-                    newImage.sprite = Sprite.Create(SquareTex, new Rect(0.0f, 0.0f, SquareTex.width, SquareTex.height), new Vector2(0.5f, 0.5f), 100.0f);
-                    break;
-                default:
-                    break;
-            }
+		// Set image type
+		switch (tree.Type)
+		{
+			case "ActionNode":
+				newImage.sprite = Sprite.Create(CircleTex, new Rect(0.0f, 0.0f, CircleTex.width, CircleTex.height), new Vector2(0.5f, 0.5f), 100.0f);
+				myObj.size = shapeSize;
+				break;
+			case "DecoratorNode":
+				newImage.sprite = Sprite.Create(DiamondTex, new Rect(0.0f, 0.0f, DiamondTex.width, DiamondTex.height), new Vector2(0.5f, 0.5f), 100.0f);
+				break;
+			case "CompositeNode":
+				newImage.sprite = Sprite.Create(SquareTex, new Rect(0.0f, 0.0f, SquareTex.width, SquareTex.height), new Vector2(0.5f, 0.5f), 100.0f);
+				break;
+			default:
+				break;
+		}
 
-            // set colour
-            switch (tree.state)
-            {
-                case ENodeStates.FAILURE:
-                    newImage.color = Color.red;
-                    break;
-                case ENodeStates.SUCCESS:
-                    newImage.color = Color.green;
-                    break;
-                case ENodeStates.RUNNING:
-                    newImage.color = Color.yellow;
-                    break;
-                default:
-                    newImage.color = Color.gray;
-                    break;
-            }
+		// set colour
+		switch (tree.state)
+		{
+			case ENodeStates.FAILURE:
+				newImage.color = Color.red;
+				break;
+			case ENodeStates.SUCCESS:
+				newImage.color = Color.green;
+				break;
+			case ENodeStates.RUNNING:
+				newImage.color = Color.yellow;
+				break;
+			default:
+				newImage.color = Color.gray;
+				break;
+		}
 
+		if (myObj.node.children != null)
+		{
+			List<SLiveTreeNode> childList = new List<SLiveTreeNode>();
 
-            
+			foreach (var child in myObj.node.children)
+			{
+				var childNode = DrawNode(child);
+				var childTrans = childNode.nodeObject.transform;
+				childTrans.SetParent(myObj.nodeObject.transform);
+				childList.Add(childNode);
+			}
 
-            // recurcivly add child nodes
-            if (tree.children.Count > 0)
-            {
-                List<SLiveTreeNode> ChildrenObjects = new List<SLiveTreeNode>();
-                float sizecount = 0;
-                float largesty = shapeSize.y;
+			// positions get
+			Vector2 childSumSize = new Vector2();
+			foreach (var child in childList)
+				childSumSize += child.size;
 
-                foreach (uint childID in tree.children)
-                {
-                    foreach (SLiveTreeNode NodeObject in LiveTreeObjects)
-                    {
-                        if (childID == NodeObject.node.id)
-                        {
-                            NodeObject.nodeObject.transform.SetParent(myObj.nodeObject.transform);
-                            ChildrenObjects.Add(NodeObject);
-                            sizecount += NodeObject.size.x;
-                            if (NodeObject.size.y > largesty)
-                                largesty = NodeObject.size.y;
-                        }
-                    }
-                }
+			// set
+			float x = -childSumSize.x / 2;
+			foreach (var child in childList)
+			{
+				x += child.size.x / 2;
+				child.nodeObject.transform.localPosition = new Vector3(x, -shapeSize.y * 1.5f, 0);
+				x += child.size.x / 2;
+			}
 
-                myObj.size = new Vector2(sizecount, shapeSize.y + largesty);
-                float startingPoint = sizecount * -0.5f;
+			myObj.size = childSumSize + new Vector2(0, shapeSize.y * 1.5f);
+		}
 
-                foreach (SLiveTreeNode n in ChildrenObjects)
-                {
-                    float localxpos = startingPoint + n.size.x / 2;
-                    n.nodeObject.transform.localPosition = new Vector3(localxpos, -shapeSize.y, 0);
-                    startingPoint += n.size.x;
-                }
-            }
-
-            myObj.node = new STreeNode(tree);
-            LiveTreeObjects.Add(myObj);
-        }
-
-        var rootnode = LiveTreeObjects[LiveTreeObjects.Count - 1];
-        contentRec.sizeDelta = rootnode.size;
-        rootnode.nodeObject.transform.localPosition = new Vector3(Screen.width / 2, -shapeSize.y/2, 0);
-    }
+		return myObj;
+	}
 
     public void ToggleSetBTIdleUpdate()
     {

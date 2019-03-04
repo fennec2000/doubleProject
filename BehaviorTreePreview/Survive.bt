@@ -5,9 +5,8 @@
 2,ActionNode,Move,CreatureAI
 3,ActionNode,NewTarget,CreatureAI
 8,Sequence,7,2,3
-9,RepeatTillFail,8
 1,ActionNode,Action,CreatureAI
-10,Sequence,5,9,2,1
-11,Sequence,2,3
-12,Selector,10,11
-0,root,12
+9,Sequence,5,8,2,1
+10,Sequence,2,3
+11,Selector,9,10
+0,root,11

@@ -116,9 +116,8 @@ public class CreatureAI : MonoBehaviour
 
 		var medFoodFindFoodSeqList = new List<uint> { invertFindFood, move, newTarget };
 		var medFoodFindFoodSeq = m_Behaviour.CreateCompositeNode(CompositeNodeTypes.Sequence, medFoodFindFoodSeqList);
-		var repeatMedFoodFindFoodSeq = m_Behaviour.CreateDecoratorNode(DecoratorNodeType.RepeatTillFail, medFoodFindFoodSeq);
 
-		var medFoodSeqList = new List<uint> { foodBelowMed, repeatMedFoodFindFoodSeq, move, action };
+		var medFoodSeqList = new List<uint> { foodBelowMed, medFoodFindFoodSeq, move, action };
 		var medFoodSeq = m_Behaviour.CreateCompositeNode(CompositeNodeTypes.Sequence, medFoodSeqList);
 
 		// Explore
@@ -210,7 +209,7 @@ public class CreatureAI : MonoBehaviour
 		{
 			if (m_Target.m_TileType == ETiles.grass)
 			{
-				m_Target.m_TileType = ETiles.sand;
+				m_Map.ChangeTile(m_Target, ETiles.sand);
 
 				m_Stats.Food += m_Gain;
 			}

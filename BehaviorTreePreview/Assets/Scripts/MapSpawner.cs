@@ -514,11 +514,32 @@ public class MapSpawner : MonoBehaviour {
 		{
 			for (int j = Mathf.Min(correctedPos.y, visionEnd.y); j < jMax; ++j)
 			{
-
 				result.Add(area.GetTile(new Vector2Int(i, j)));
 			}
 		}
 
 		return result;
 	}
+
+	public void ChangeTile(STile tile, ETiles newTileState)
+	{
+		tile.m_TileType = newTileState;
+
+		// update colour
+		switch (newTileState)
+		{
+			case ETiles.water:
+				tile.m_GameObject.GetComponent<Renderer>().material = m_TileMaterials[(int)ETiles.water];
+				break;
+			case ETiles.sand:
+				tile.m_GameObject.GetComponent<Renderer>().material = m_TileMaterials[(int)ETiles.sand];
+				break;
+			case ETiles.grass:
+				tile.m_GameObject.GetComponent<Renderer>().material = m_TileMaterials[(int)ETiles.grass];
+				break;
+			default:
+				break;
+		}
+	}
+
 }
