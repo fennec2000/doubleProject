@@ -69,6 +69,8 @@ public class CreatureAI : MonoBehaviour
 	// creature gets traits from parent
 	// traits carnivor/herbivor, land/water (time limmited if < 33%), mass (parents avg. mass)
 	// traits can only go 10% from given by parent
+	[SerializeField]
+	private Core m_Core;
 
 	private BehaviourTree m_Behaviour;
 	private CCreatureStats m_Stats;
@@ -85,10 +87,13 @@ public class CreatureAI : MonoBehaviour
 	private byte m_Drain = 1;
 	private byte m_Gain = 5;
 
+	private float m_Timer = 0;
+
 	internal BehaviourTree Behaviour { get => m_Behaviour; set => m_Behaviour = value; }
 
-	public void Setup(CCreatureStats parent, MapSpawner map)
+	public void Setup(CCreatureStats parent, MapSpawner map, Core core)
 	{
+		m_Core = core;
 		m_Map = map;
 		CreateSurviveTree();
 		m_Stats = new CCreatureStats(parent);
@@ -138,19 +143,27 @@ public class CreatureAI : MonoBehaviour
 	}
 
 	// Update is called once per frame
-	private void FixedUpdate()
+	private void Update()
 	{
-		// Drain
-		m_Stats.Food -= m_Drain;
+		if (m_Core.GameSpeed == 0)
+			return;
 
-		m_Behaviour.RunTree();
+		m_Timer += Time.deltaTime;
+
+		if (m_Timer >= 1 / (m_Core.AIUpdates * m_Core.GameSpeed))
+		{
+			// Drain
+			m_Stats.Food -= m_Drain;
+
+			m_Behaviour.RunTree();
+		}
 	}
 
 	private ENodeStates Move()
 	{
 		if (m_Target.m_GameObject != null)
 		{
-			if (Vector3.Distance(transform.position, m_Target.m_GameObject.transform.position) > m_TargetDistance)
+			if (Vector3.Distance(transform.position, m_Target.m_GameObject.transform.position) > m_TargetDistance * m_Core.GameSpeed)
 			{
 				// debug
 				Debug.DrawLine(transform.position, m_Target.m_GameObject.transform.position);
@@ -160,7 +173,7 @@ public class CreatureAI : MonoBehaviour
 
 				// move to target
 				Vector3 vec = m_Target.m_GameObject.transform.position - transform.position;
-				var dist = vec.normalized * m_Speed * Time.deltaTime;
+				var dist = vec.normalized * m_Speed * Time.deltaTime * m_Core.GameSpeed;
 
 				if (dist.magnitude > vec.magnitude)
 					transform.position += vec;
@@ -168,6 +181,10 @@ public class CreatureAI : MonoBehaviour
 					transform.position += dist;
 
 				return ENodeStates.RUNNING;
+			}
+			else
+			{
+				transform.position = m_Target.m_GameObject.transform.position;
 			}
 
 			return ENodeStates.SUCCESS;

@@ -273,6 +273,8 @@ public class MapObject : ScriptableObject
 }
 
 public class MapSpawner : MonoBehaviour {
+	[SerializeField]
+	Core m_Core;
 
 	[SerializeField]
 	GameObject m_TilePrefab;
@@ -338,7 +340,7 @@ public class MapSpawner : MonoBehaviour {
 
 		// spawns
 		var spawned = Instantiate(m_CreaturePrefab, new Vector3(20, 0, 20), Quaternion.identity, m_CreatureMapObj.transform).GetComponent<CreatureAI>();
-		spawned.Setup(null, this);
+		spawned.Setup(null, this, m_Core);
 		CreatureAIs.Add(spawned);
 	}
 
