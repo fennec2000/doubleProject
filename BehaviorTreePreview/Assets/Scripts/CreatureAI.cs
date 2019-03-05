@@ -88,8 +88,14 @@ public class CreatureAI : MonoBehaviour
 	private byte m_Gain = 5;
 
 	private float m_Timer = 0;
+	private float m_DrainTimer = 0;
+
+	enum State { Normal, Dead }
+	private State m_State = State.Normal;
 
 	internal BehaviourTree Behaviour { get => m_Behaviour; set => m_Behaviour = value; }
+
+	public CCreatureStats GetCreatureStats() { return m_Stats; }
 
 	public void Setup(CCreatureStats parent, MapSpawner map, Core core)
 	{
@@ -145,18 +151,28 @@ public class CreatureAI : MonoBehaviour
 	// Update is called once per frame
 	private void Update()
 	{
-		if (m_Core.GameSpeed == 0)
-			return;
-
-		m_Timer += Time.deltaTime;
-
-		if (m_Timer >= 1 / (m_Core.AIUpdates * m_Core.GameSpeed))
+		if (m_State == State.Normal)
 		{
-			// Drain
-			m_Stats.Food -= m_Drain;
+			if (m_Core.GameSpeed == 0)
+				return;
 
-			m_Behaviour.RunTree();
+			m_Timer += Time.deltaTime * m_Core.GameSpeed;
+			m_DrainTimer += Time.deltaTime * m_Core.GameSpeed;
+
+			if (m_Timer >= 1 / m_Core.AIUpdates)
+			{
+				m_Behaviour.RunTree();
+				m_Timer = 0;
+			}
+
+			if (m_DrainTimer >= 1)
+			{
+				// Drain
+				m_Stats.Food -= m_Drain;
+				m_DrainTimer = 0;
+			}
 		}
+		
 	}
 
 	private ENodeStates Move()
