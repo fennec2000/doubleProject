@@ -4,11 +4,7 @@ using UnityEngine;
 
 /*
  *  TODO List
- *  have creatures walk
- *  have creatures obay water / land
- *  creatures can consume resources
  *  creatures remember last food and water
- *  creature seek out resouce when needed
  *  creature reporduce
  *  creatures get trates for parents
  *  move takes trates into account
@@ -124,9 +120,11 @@ public class CreatureAI : MonoBehaviour
 
 		var findFood = m_Behaviour.CreateActionNode(TargetFood);
 		var invertFindFood = m_Behaviour.CreateDecoratorNode(DecoratorNodeType.Inverter, findFood);
+		var targetFood = m_Behaviour.CreateActionNode(IsTargetFood);
+		var invertTargetFood = m_Behaviour.CreateDecoratorNode(DecoratorNodeType.Inverter, targetFood);
 
-		var medFoodFindFoodSeqList = new List<uint> { invertFindFood, move, newTarget };
-		var medFoodFindFoodSeq = m_Behaviour.CreateCompositeNode(CompositeNodeTypes.Sequence, medFoodFindFoodSeqList);
+		var medFoodFindFoodSeqList = new List<uint> { targetFood, invertFindFood };
+		var medFoodFindFoodSeq = m_Behaviour.CreateCompositeNode(CompositeNodeTypes.Selector, medFoodFindFoodSeqList);
 
 		var medFoodSeqList = new List<uint> { foodBelowMed, medFoodFindFoodSeq, move, action };
 		var medFoodSeq = m_Behaviour.CreateCompositeNode(CompositeNodeTypes.Sequence, medFoodSeqList);
@@ -280,5 +278,12 @@ public class CreatureAI : MonoBehaviour
 	private ENodeStates WaterLow()
 	{
 		return m_Stats.Water >= 77 ? ENodeStates.SUCCESS : ENodeStates.FAILURE;
+	}
+
+	private ENodeStates IsTargetFood()
+	{
+		if (m_Target.m_TileType == ETiles.grass)
+			return ENodeStates.SUCCESS;
+		return ENodeStates.FAILURE;
 	}
 }
