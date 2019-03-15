@@ -10,13 +10,13 @@ public class Core : MonoBehaviour
 
 	public enum EGameState { Simulating, Observing, MapMaker }
 
-	private int m_AIUpdates = 20;
+	private float m_AIUpdates = 0.5f;
 	private int m_GameSpeed = 0;
 	private EGameState m_GameState = EGameState.Simulating;
 
 	public int GameSpeed { get => m_GameSpeed; set => m_GameSpeed = value; }
 	public EGameState GameState { get => m_GameState; set => m_GameState = value; }
-	public int AIUpdates { get => m_AIUpdates; set => m_AIUpdates = value; }
+	public float AIUpdates { get => m_AIUpdates; set => m_AIUpdates = value; }
 
 	private void Start()
 	{

@@ -29,6 +29,7 @@ public class TreeVisual : MonoBehaviour {
     public Texture2D SquareTex;
     public Texture2D DiamondTex;
     public Texture2D CircleTex;
+	public GameObject NodeLine;
     public Toggle toggle;
     private List<SLiveTreeNode> LiveTreeObjects;
     private Vector2 shapeSize = new Vector2(100, 100);
@@ -98,8 +99,9 @@ public class TreeVisual : MonoBehaviour {
 	{
 		var stats = targetAI.GetCreatureStats();
 		string generated = "Stats:\n";
-		generated += "Food: " + stats.Food + '\n';
-		generated += "Water: " + stats.Water + '\n';
+		generated += "Status: " + stats.Item2 + '\n';
+		generated += "Food: " + stats.Item1.Food + '\n';
+		generated += "Water: " + stats.Item1.Water + '\n';
 
 		m_StatsText.text = generated;
 	}
@@ -249,6 +251,32 @@ public class TreeVisual : MonoBehaviour {
 				x += child.size.x / 2;
 				child.nodeObject.transform.localPosition = new Vector3(x, -shapeSize.y * 1.5f, 0);
 				x += child.size.x / 2;
+			}
+
+			// Add lines between nodes
+			foreach (var child in childList)
+			{
+				// create line
+				var line = Instantiate(NodeLine);
+
+				// make this parent
+				line.transform.SetParent(myObj.nodeObject.transform);
+
+				// move to centre
+				var pos = (myObj.nodeObject.transform.position + child.nodeObject.transform.position) / 2;
+				line.transform.position = pos;
+
+				// rotate
+				var vec = myObj.nodeObject.transform.position - child.nodeObject.transform.position;
+				vec.y -= shapeSize.y;
+
+				var angle = -Mathf.Rad2Deg * Mathf.Atan(vec.x / vec.y);
+				line.transform.Rotate(new Vector3(0, 0, angle));
+
+				// strech
+				RectTransform rect = line.GetComponent<RectTransform>();
+				if (rect != null)
+					rect.sizeDelta = new Vector2(5, vec.magnitude);
 			}
 
 			myObj.size = childSumSize + new Vector2(0, shapeSize.y * 1.5f);

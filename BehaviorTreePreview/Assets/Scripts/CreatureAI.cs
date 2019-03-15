@@ -70,28 +70,35 @@ public class CreatureAI : MonoBehaviour
 
 	private BehaviourTree m_Behaviour;
 	private CCreatureStats m_Stats;
-	
+
 	private STile m_Target;
 	private STile m_TargetLast;
 	private MapSpawner m_Map;
 	[SerializeField]
 	private Rigidbody m_Rigidbody;
+	[SerializeField]
+	private Material m_DeadMaterial;
+	[SerializeField]
+	private TextMesh m_Text;
+	[SerializeField]
+	private AudioSource m_Audio;
 
 	private float m_TargetDistance = 0.2f;
 	private float m_Speed = 1.0f;
 	private float m_ViewDistance = 3.0f;
 	private byte m_Drain = 1;
-	private byte m_Gain = 5;
+	private byte m_Gain = 10;
+	private byte[] m_StatBoundrys = new byte[3] { 77, 128, 179 };
 
 	private float m_Timer = 0;
 	private float m_DrainTimer = 0;
 
-	enum State { Normal, Dead }
-	private State m_State = State.Normal;
+	public enum ECreatureState { Normal, Dead }
+	private ECreatureState m_State = ECreatureState.Normal;
 
 	internal BehaviourTree Behaviour { get => m_Behaviour; set => m_Behaviour = value; }
 
-	public CCreatureStats GetCreatureStats() { return m_Stats; }
+	public (CCreatureStats, ECreatureState) GetCreatureStats() { return (m_Stats, m_State); }
 
 	public void Setup(CCreatureStats parent, MapSpawner map, Core core)
 	{
@@ -110,9 +117,26 @@ public class CreatureAI : MonoBehaviour
 		m_Behaviour = new BehaviourTree();
 
 		// general actions
-		var action = m_Behaviour.CreateActionNode(Action);
-		var move = m_Behaviour.CreateActionNode(Move);
+		var actionFood = m_Behaviour.CreateActionNode(EatFood);
+		var actionWater = m_Behaviour.CreateActionNode(DrinkWater);
+		var move = m_Behaviour.CreateActionNode(CreatureMoving);
 		var newTarget = m_Behaviour.CreateActionNode(NewTarget);
+
+		// medium water
+		var waterMed = m_Behaviour.CreateActionNode(WaterMed);
+		var waterBelowMed = m_Behaviour.CreateDecoratorNode(DecoratorNodeType.Inverter, waterMed);
+
+		var findWater = m_Behaviour.CreateActionNode(TargetWater);
+		var invertFindWater = m_Behaviour.CreateDecoratorNode(DecoratorNodeType.Inverter, findWater);
+		var targetWater = m_Behaviour.CreateActionNode(IsTargetNearWater);
+		var invertTargetWater = m_Behaviour.CreateDecoratorNode(DecoratorNodeType.Inverter, targetWater);
+
+		var medWaterFindWaterSeqList = new List<uint> { targetWater, invertFindWater };
+		var medWaterFindWaterSeq = m_Behaviour.CreateCompositeNode(CompositeNodeTypes.Selector, medWaterFindWaterSeqList);
+
+		var medWaterSeqList = new List<uint> { waterBelowMed, medWaterFindWaterSeq, move, actionWater };
+		var medWaterSeq = m_Behaviour.CreateCompositeNode(CompositeNodeTypes.Sequence, medWaterSeqList);
+
 
 		// medium food
 		var foodMed = m_Behaviour.CreateActionNode(FoodMed);
@@ -126,7 +150,7 @@ public class CreatureAI : MonoBehaviour
 		var medFoodFindFoodSeqList = new List<uint> { targetFood, invertFindFood };
 		var medFoodFindFoodSeq = m_Behaviour.CreateCompositeNode(CompositeNodeTypes.Selector, medFoodFindFoodSeqList);
 
-		var medFoodSeqList = new List<uint> { foodBelowMed, medFoodFindFoodSeq, move, action };
+		var medFoodSeqList = new List<uint> { foodBelowMed, medFoodFindFoodSeq, move, actionFood };
 		var medFoodSeq = m_Behaviour.CreateCompositeNode(CompositeNodeTypes.Sequence, medFoodSeqList);
 
 		// Explore
@@ -134,7 +158,7 @@ public class CreatureAI : MonoBehaviour
 		var explore = m_Behaviour.CreateCompositeNode(CompositeNodeTypes.Sequence, exploreList);
 
 		// top level
-		var children = new List<uint> { medFoodSeq, explore };
+		var children = new List<uint> { medWaterSeq, medFoodSeq, explore };
 		var root = m_Behaviour.CreateCompositeNode(CompositeNodeTypes.Selector, children);
 		m_Behaviour.SetRootNode(root);
 
@@ -149,10 +173,13 @@ public class CreatureAI : MonoBehaviour
 	// Update is called once per frame
 	private void Update()
 	{
-		if (m_State == State.Normal)
+		if (m_State == ECreatureState.Normal)
 		{
 			if (m_Core.GameSpeed == 0)
 				return;
+
+			// update move
+			Move();
 
 			m_Timer += Time.deltaTime * m_Core.GameSpeed;
 			m_DrainTimer += Time.deltaTime * m_Core.GameSpeed;
@@ -165,15 +192,51 @@ public class CreatureAI : MonoBehaviour
 
 			if (m_DrainTimer >= 1)
 			{
-				// Drain
-				m_Stats.Food -= m_Drain;
 				m_DrainTimer = 0;
+
+				// Drain
+				if (m_Stats.Water > m_Drain)
+					m_Stats.Water -= m_Drain;
+				else
+				{
+					m_Stats.Water = 0;
+					m_State = ECreatureState.Dead;
+
+					var rend = GetComponentInChildren<Renderer>();
+					if (rend != null)
+						rend.material = m_DeadMaterial;
+				}
+
+				if (m_Stats.Food > m_Drain)
+					m_Stats.Food -= m_Drain;
+				else
+				{
+					m_Stats.Food = 0;
+					m_State = ECreatureState.Dead;
+
+					var rend = GetComponentInChildren<Renderer>();
+					if (rend != null)
+						rend.material = m_DeadMaterial;
+				}
 			}
 		}
 		
 	}
 
-	private ENodeStates Move()
+	private ENodeStates CreatureMoving()
+	{
+		if (m_Target.m_GameObject != null)
+		{
+			if (Vector3.Distance(transform.position, m_Target.m_GameObject.transform.position) > m_TargetDistance * m_Core.GameSpeed)
+				return ENodeStates.RUNNING;
+
+			return ENodeStates.SUCCESS;
+		}
+
+		return ENodeStates.FAILURE;
+	}
+
+	void Move()
 	{
 		if (m_Target.m_GameObject != null)
 		{
@@ -193,18 +256,12 @@ public class CreatureAI : MonoBehaviour
 					transform.position += vec;
 				else
 					transform.position += dist;
-
-				return ENodeStates.RUNNING;
 			}
 			else
 			{
 				transform.position = m_Target.m_GameObject.transform.position;
 			}
-
-			return ENodeStates.SUCCESS;
 		}
-
-		return ENodeStates.FAILURE;
 	}
 
 	private ENodeStates TargetFood()
@@ -224,6 +281,23 @@ public class CreatureAI : MonoBehaviour
 		return ENodeStates.FAILURE;
 	}
 
+	private ENodeStates TargetWater()
+	{
+		Vector2 dirrectionVector = new Vector2(transform.forward.x, transform.forward.z);
+		var result = m_Map.CreatureTileVision(new Vector2(transform.position.x, transform.position.z), dirrectionVector.normalized * m_ViewDistance);
+
+		for (int i = 0; i < result.Count; ++i)
+		{
+			if (result[i].m_TileType == ETiles.grass && m_Map.GetNeighbourWater(m_Target))
+			{
+				m_Target = result[i];
+				return ENodeStates.SUCCESS;
+			}
+		}
+
+		return ENodeStates.FAILURE;
+	}
+
 	private ENodeStates NewTarget()
 	{
 		// new target
@@ -231,10 +305,12 @@ public class CreatureAI : MonoBehaviour
 		m_TargetLast = m_Target;
 		m_Target = result;
 
+		CreatureSpeak("Exploring");
+
 		return ENodeStates.SUCCESS;
 	}
 
-	private ENodeStates Action()
+	private ENodeStates EatFood()
 	{
 		if (Vector3.Distance(transform.position, m_Target.m_GameObject.transform.position) <= m_TargetDistance)
 		{
@@ -249,35 +325,50 @@ public class CreatureAI : MonoBehaviour
 		return ENodeStates.FAILURE;
 	}
 
-	private ENodeStates FoodOver(byte value)
+	private ENodeStates DrinkWater()
 	{
-		return m_Stats.Food >= value ? ENodeStates.SUCCESS : ENodeStates.FAILURE;
+		if (Vector3.Distance(transform.position, m_Target.m_GameObject.transform.position) <= m_TargetDistance)
+		{
+			if (m_Map.GetNeighbourWater(m_Target))
+			{
+				m_Stats.Water += m_Gain;
+				return ENodeStates.SUCCESS;
+			}
+		}
+
+		return ENodeStates.FAILURE;
 	}
 
 	private ENodeStates FoodHigh()
 	{
-		return m_Stats.Food >= 179 ? ENodeStates.SUCCESS : ENodeStates.FAILURE;
+		return m_Stats.Food >= m_StatBoundrys[2] ? ENodeStates.SUCCESS : ENodeStates.FAILURE;
 	}
 	private ENodeStates FoodMed()
 	{
-		return m_Stats.Food >= 128 ? ENodeStates.SUCCESS : ENodeStates.FAILURE;
+		if (m_Stats.Food < m_StatBoundrys[1])
+			CreatureSpeak("Hungry");
+
+		return m_Stats.Food >= m_StatBoundrys[1] ? ENodeStates.SUCCESS : ENodeStates.FAILURE;
 	}
 	private ENodeStates FoodLow()
 	{
-		return m_Stats.Food >= 77 ? ENodeStates.SUCCESS : ENodeStates.FAILURE;
+		return m_Stats.Food >= m_StatBoundrys[0] ? ENodeStates.SUCCESS : ENodeStates.FAILURE;
 	}
 
 	private ENodeStates WaterHigh()
 	{
-		return m_Stats.Water >= 179 ? ENodeStates.SUCCESS : ENodeStates.FAILURE;
+		return m_Stats.Water >= m_StatBoundrys[2] ? ENodeStates.SUCCESS : ENodeStates.FAILURE;
 	}
 	private ENodeStates WaterMed()
 	{
-		return m_Stats.Water >= 128 ? ENodeStates.SUCCESS : ENodeStates.FAILURE;
+		if (m_Stats.Water < m_StatBoundrys[1])
+			CreatureSpeak("Thirsty");
+
+		return m_Stats.Water >= m_StatBoundrys[1] ? ENodeStates.SUCCESS : ENodeStates.FAILURE;
 	}
 	private ENodeStates WaterLow()
 	{
-		return m_Stats.Water >= 77 ? ENodeStates.SUCCESS : ENodeStates.FAILURE;
+		return m_Stats.Water >= m_StatBoundrys[0] ? ENodeStates.SUCCESS : ENodeStates.FAILURE;
 	}
 
 	private ENodeStates IsTargetFood()
@@ -285,5 +376,26 @@ public class CreatureAI : MonoBehaviour
 		if (m_Target.m_TileType == ETiles.grass)
 			return ENodeStates.SUCCESS;
 		return ENodeStates.FAILURE;
+	}
+
+	private ENodeStates IsTargetNearWater()
+	{
+		if (m_Map.GetNeighbourWater(m_Target))
+			return ENodeStates.SUCCESS;
+		return ENodeStates.FAILURE;
+	}
+
+	void CreatureSpeak(string message)
+	{
+		// check if there is a update in text
+		if (m_Text.text == message)
+			return;
+
+		// play audio if not speaking
+		if (!m_Audio.isPlaying)
+			m_Audio.Play();
+
+		// update text
+		m_Text.text = message;
 	}
 }

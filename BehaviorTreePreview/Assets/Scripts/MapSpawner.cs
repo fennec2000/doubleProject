@@ -544,4 +544,30 @@ public class MapSpawner : MonoBehaviour {
 		}
 	}
 
+	public bool GetNeighbourWater(STile givenTile)
+	{
+		// Get map
+		MapObject currentMapObject = null;
+		var numOfTiles = m_TileList.Count;
+		for (int i = 0; i < numOfTiles; ++i)
+		{
+			if (m_TileList[i].ContainsTile(givenTile))
+			{
+				currentMapObject = m_TileList[i];
+				break;
+			}
+		}
+
+		// get neighbours
+		var n = currentMapObject.GetTileNeighbours(givenTile);
+
+		// find water
+		foreach(var tile in n)
+		{
+			if (tile.m_TileType == ETiles.water)
+				return true;
+		}
+
+		return false;
+	}
 }
