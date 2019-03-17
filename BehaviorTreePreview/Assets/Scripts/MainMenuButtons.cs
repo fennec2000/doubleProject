@@ -94,6 +94,7 @@ public class MainMenuButtons : MonoBehaviour
 		}
 	}
 
+	// static menu functions for unity to call
 	public void SwapMenuMain()
 	{
 		ChangeMenu(EMenuState.MainMenu);
@@ -108,6 +109,7 @@ public class MainMenuButtons : MonoBehaviour
 		ChangeMenu(EMenuState.Credits);
 	}
 
+	// functions for sliders in options for volume
 	public void SetMasterVol(float volume)
 	{
 		m_MasterMixer.SetFloat("MasterMixerVolume", Mathf.Log10(volume) * 20);

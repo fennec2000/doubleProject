@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class Core : MonoBehaviour
@@ -45,6 +46,11 @@ public class Core : MonoBehaviour
 		{
 			m_GameSpeed = 3;
 			m_GameSpeedText.text = "Game Speed: 3x";
+		}
+		else if (Input.GetButtonDown("Back"))
+		{
+			Debug.Log("Loading main menu");
+			SceneManager.LoadScene(0);
 		}
 	}
 }

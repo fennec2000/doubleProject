@@ -43,11 +43,6 @@ public class TreeVisual : MonoBehaviour {
 		m_StatsText = m_StatsObj.GetComponentInChildren<Text>();
 	}
 
-    public void SetTargetNull()
-    {
-        target = null;
-    }
-
     // Update is called once per frame
     void Update()
     {
@@ -95,6 +90,13 @@ public class TreeVisual : MonoBehaviour {
 		}
     }
 
+	// Set target null, used to close the behaviour tree gui
+	public void SetTargetNull()
+	{
+		target = null;
+	}
+
+	// update UI stats text
 	void UpdateStats()
 	{
 		var stats = targetAI.GetCreatureStats();
@@ -106,6 +108,7 @@ public class TreeVisual : MonoBehaviour {
 		m_StatsText.text = generated;
 	}
 
+	// update behaviour tree visuals
 	void UpdateTree()
 	{
 		var transform = LiveTreeOverlay.transform.GetChild(0).GetChild(0).GetChild(0).GetComponentInChildren<Transform>();
@@ -114,6 +117,7 @@ public class TreeVisual : MonoBehaviour {
 		UpdateNode(transform, rootNode);
 	}
 
+	// update a single node and call its children to update
     void UpdateNode(Transform transform, STreeNode node)
     {
 		// update text
@@ -139,6 +143,7 @@ public class TreeVisual : MonoBehaviour {
 				break;
 		}
 
+		// update children
 		if (node.children != null)
 		{
 			for (int i = 0; i < node.children.Count; ++i)
@@ -148,6 +153,7 @@ public class TreeVisual : MonoBehaviour {
 		}
 	}
 
+	// initial draw of tree for gui behaviour tree diagram
     void DrawTree()
     {
 		m_Core.GameState = Core.EGameState.Observing;
@@ -170,6 +176,7 @@ public class TreeVisual : MonoBehaviour {
 		
 	}
 
+	// draw a single node in tree and then draw children
 	SLiveTreeNode DrawNode(STreeNode tree)
 	{
 		// new object for each node
@@ -227,6 +234,7 @@ public class TreeVisual : MonoBehaviour {
 				break;
 		}
 
+		// draw children
 		if (myObj.node.children != null)
 		{
 			List<SLiveTreeNode> childList = new List<SLiveTreeNode>();
@@ -284,9 +292,4 @@ public class TreeVisual : MonoBehaviour {
 
 		return myObj;
 	}
-
-    public void ToggleSetBTIdleUpdate()
-    {
-        targetBT.UpdateIdleNodes(toggle.isOn);
-    }
 }

@@ -22,6 +22,7 @@ public class MapObject : ScriptableObject
 
 	public Vector2 GetPosition() { return m_Position; }
 
+	// Get tile, can go between different areas
 	public STile GetTile(Vector2Int pos)
 	{
 		// get area and pos in area
@@ -35,6 +36,7 @@ public class MapObject : ScriptableObject
 		return ReturnTile(new Vector2Int(x, y), pos);
 	}
 
+	// get tile in area
 	public STile ReturnTile(Vector2Int area, Vector2Int pos)
 	{
 		if (area.x > 0 && m_Neighbours[2] != null)
@@ -63,9 +65,7 @@ public class MapObject : ScriptableObject
 
 		return m_Tiles[pos.x, pos.y];
 	}
-
-	public MapObject[] GetNeighbours() { return m_Neighbours; }
-
+	
 	public void SetNeighbour(MapObject given, int direction)
 	{
 		if (m_Neighbours.Length > direction)
@@ -226,6 +226,7 @@ public class MapObject : ScriptableObject
 		return result;
 	}
 
+	// constructor
 	public MapObject(Vector2 initPos, ETiles[,] givenTiles, MapObject[] initNeighbours, GameObject tilePrefab, Material[] materials, GameObject givenParent)
 	{
 		GameObject newGO = new GameObject("Area");
@@ -344,6 +345,7 @@ public class MapSpawner : MonoBehaviour {
 		CreatureAIs.Add(spawned);
 	}
 
+
 	MapObject GetMapObjectPos(Vector2 pos)
 	{
 		foreach (var mo in m_TileList)
@@ -368,11 +370,7 @@ public class MapSpawner : MonoBehaviour {
 		};
 	}
 
-	// Update is called once per frame
-	void Update () {
-		
-	}
-
+	// must be called before running tree
 	public STile[] GetFirstTarget(Vector3 pos)
 	{
 		// get section
@@ -500,7 +498,7 @@ public class MapSpawner : MonoBehaviour {
 		else
 			return old;
 	}
-
+	
 	public List<STile> CreatureTileVision(Vector2 pos, Vector2 visionVector)
 	{
 		var correctedPos = new Vector2Int(Mathf.RoundToInt(pos.x), Mathf.RoundToInt(pos.y));
@@ -544,6 +542,7 @@ public class MapSpawner : MonoBehaviour {
 		}
 	}
 
+	// gets if tile has a water neighbour
 	public bool GetNeighbourWater(STile givenTile)
 	{
 		// Get map

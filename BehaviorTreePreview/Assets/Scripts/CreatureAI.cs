@@ -32,10 +32,15 @@ public class CCreatureStats
 		get { return m_Water; }
 		set { m_Water = value; }
 	}
+	
+	// default constructor
+	private CCreatureStats()
+	{
+		m_LandWaterRatio = 127;
+	}
 
-	// requires 10% to swim or walk on land more that 1 from shore
-	private CCreatureStats() { m_LandWaterRatio = 127; }
-
+	// copy constructor
+	// used for when a child wants its parents current stats
 	public CCreatureStats(CCreatureStats parent)
 	{
 		m_ParentsTraits = new CCreatureStats();
@@ -100,6 +105,7 @@ public class CreatureAI : MonoBehaviour
 
 	public (CCreatureStats, ECreatureState) GetCreatureStats() { return (m_Stats, m_State); }
 
+	// Setup required before running
 	public void Setup(CCreatureStats parent, MapSpawner map, Core core)
 	{
 		m_Core = core;
@@ -112,6 +118,7 @@ public class CreatureAI : MonoBehaviour
 		gameObject.SetActive(true);
 	}
 
+	// create AI behaviour tree
 	private void CreateSurviveTree()
 	{
 		m_Behaviour = new BehaviourTree();
@@ -165,11 +172,6 @@ public class CreatureAI : MonoBehaviour
 		m_Behaviour.SaveTree("Survive.bt");
 	}
 
-	// Start is called before the first frame update
-	private void Start()
-	{
-	}
-
 	// Update is called once per frame
 	private void Update()
 	{
@@ -181,15 +183,18 @@ public class CreatureAI : MonoBehaviour
 			// update move
 			Move();
 
+			// update timers
 			m_Timer += Time.deltaTime * m_Core.GameSpeed;
 			m_DrainTimer += Time.deltaTime * m_Core.GameSpeed;
 
+			// run tree
 			if (m_Timer >= 1 / m_Core.AIUpdates)
 			{
 				m_Behaviour.RunTree();
 				m_Timer = 0;
 			}
 
+			// update creature stats
 			if (m_DrainTimer >= 1)
 			{
 				m_DrainTimer = 0;
@@ -222,6 +227,8 @@ public class CreatureAI : MonoBehaviour
 		}
 		
 	}
+
+	// Functions for creature in tree
 
 	private ENodeStates CreatureMoving()
 	{
@@ -264,6 +271,7 @@ public class CreatureAI : MonoBehaviour
 		}
 	}
 
+	// Creature targets
 	private ENodeStates TargetFood()
 	{
 		Vector2 dirrectionVector = new Vector2(transform.forward.x, transform.forward.z);
@@ -310,6 +318,7 @@ public class CreatureAI : MonoBehaviour
 		return ENodeStates.SUCCESS;
 	}
 
+	// Creature actions
 	private ENodeStates EatFood()
 	{
 		if (Vector3.Distance(transform.position, m_Target.m_GameObject.transform.position) <= m_TargetDistance)
@@ -338,6 +347,8 @@ public class CreatureAI : MonoBehaviour
 
 		return ENodeStates.FAILURE;
 	}
+
+	// creature check functions
 
 	private ENodeStates FoodHigh()
 	{
@@ -384,6 +395,8 @@ public class CreatureAI : MonoBehaviour
 			return ENodeStates.SUCCESS;
 		return ENodeStates.FAILURE;
 	}
+
+	// creature helper functions
 
 	void CreatureSpeak(string message)
 	{
