@@ -292,4 +292,9 @@ public class TreeVisual : MonoBehaviour {
 
 		return myObj;
 	}
+
+	public void ToggleSetBTIdleUpdate()
+	{
+		targetBT.UpdateIdleNodes(toggle.isOn);
+	}
 }
