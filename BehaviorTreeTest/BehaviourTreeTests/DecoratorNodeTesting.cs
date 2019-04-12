@@ -10,7 +10,19 @@ namespace DecoratorNodeTesting
     {
         TestMethods myTestsFuncs = new TestMethods();
 
-        [TestMethod]
+		[TestMethod]
+		public void FAILURE1()
+		{
+			myTestsFuncs.counter = 9;
+			myTestsFuncs.target = 10;
+			ActionNode IncAction = new ActionNode(myTestsFuncs.CounterInc);
+			Inverter test = new Inverter(IncAction);
+			test.Run();
+
+			Assert.AreEqual(NodeStates.FAILURE, test.NodeState);
+		}
+
+		[TestMethod]
         public void SUCCESS1()
         {
             myTestsFuncs.counter = 0;
@@ -22,18 +34,24 @@ namespace DecoratorNodeTesting
             Assert.AreEqual(NodeStates.SUCCESS, test.NodeState);
         }
 
-        [TestMethod]
-        public void FAILURE1()
-        {
-            myTestsFuncs.counter = 9;
-            myTestsFuncs.target = 10;
-            ActionNode IncAction = new ActionNode(myTestsFuncs.CounterInc);
-            Inverter test = new Inverter(IncAction);
-            test.Run();
+		[TestMethod]
+		public void SPEED()
+		{
+			myTestsFuncs.counter = 9;
+			myTestsFuncs.target = 10;
+			ActionNode IncAction = new ActionNode(myTestsFuncs.CounterInc);
+			Inverter invert = new Inverter(IncAction);
 
-            Assert.AreEqual(NodeStates.FAILURE, test.NodeState);
-        }
-    }
+			for (int i = 0; i < 10000; ++i)
+			{
+				invert = new Inverter(invert);
+			}
+
+			invert.Run();
+
+			Assert.AreEqual(NodeStates.FAILURE, invert.NodeState);
+		}
+	}
 
     [TestClass]
     public class RepeaterTests

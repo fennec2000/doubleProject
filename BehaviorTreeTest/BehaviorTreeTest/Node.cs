@@ -208,7 +208,7 @@ public class RepeatTillFail : DecoratorNode
                     continue;
                 case NodeStates.RUNNING:
                     m_nodeState = NodeStates.RUNNING;
-                    continue;
+                    return m_nodeState;
             }
         }
 
