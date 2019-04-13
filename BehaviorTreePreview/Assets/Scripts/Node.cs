@@ -205,8 +205,8 @@ public class RepeatTillFail : DecoratorNode
                     continue;
                 case ENodeStates.RUNNING:
                     m_nodeState = ENodeStates.RUNNING;
-                    continue;
-            }
+					return m_nodeState;
+			}
         }
 
         m_nodeState = ENodeStates.FAILURE;
